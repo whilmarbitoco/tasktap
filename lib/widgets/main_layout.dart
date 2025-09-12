@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../views/home_page.dart';
 import '../views/map_page.dart';
+import '../views/messages_page.dart';
 import '../views/profile_page.dart';
 
 class MainLayout extends StatefulWidget {
@@ -12,14 +13,14 @@ class MainLayout extends StatefulWidget {
   State<MainLayout> createState() => _MainLayoutState();
 }
 
-class _MainLayoutState extends State<MainLayout> {
+class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
   late int _currentIndex;
+  late PageController _pageController;
   
   final List<Widget> _pages = [
     const HomePage(),
     const MapPage(),
-    const SizedBox(), // Placeholder for FAB
-    const SizedBox(), // Messages placeholder
+    const MessagesPage(),
     const ProfilePage(),
   ];
 
@@ -27,15 +28,28 @@ class _MainLayoutState extends State<MainLayout> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: _currentIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_currentIndex],
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        children: _pages,
+      ),
       bottomNavigationBar: _buildBottomNavigation(),
-      floatingActionButton: _buildFloatingActionButton(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 
@@ -45,21 +59,17 @@ class _MainLayoutState extends State<MainLayout> {
         color: Colors.white,
         border: Border(top: BorderSide(color: Colors.grey[200]!)),
       ),
-      child: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8,
-        color: Colors.white,
-        elevation: 0,
+      child: SafeArea(
         child: SizedBox(
-          height: 60,
+          height: 70,
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _buildNavItem(Icons.home, 'Home', 0),
               _buildNavItem(Icons.map, 'Map', 1),
-              const SizedBox(width: 40), // Space for FAB
-              _buildNavItem(Icons.chat_bubble_outline, 'Messages', 3),
-              _buildNavItem(Icons.person_outline, 'Profile', 4),
+              _buildAddButton(),
+              _buildNavItem(Icons.chat_bubble_outline, 'Messages', 2),
+              _buildNavItem(Icons.person_outline, 'Profile', 3),
             ],
           ),
         ),
@@ -71,56 +81,59 @@ class _MainLayoutState extends State<MainLayout> {
     final isActive = _currentIndex == index;
     return GestureDetector(
       onTap: () {
-        setState(() {
-          _currentIndex = index;
-        });
+        _pageController.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+        );
       },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isActive ? const Color(0xFFF59E0B) : Colors.grey[600],
-            size: 24,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
               color: isActive ? const Color(0xFFF59E0B) : Colors.grey[600],
-              fontSize: 12,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+              size: 24,
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: isActive ? const Color(0xFFF59E0B) : Colors.grey[600],
+                fontSize: 12,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildFloatingActionButton() {
-    return Container(
-      width: 65,
-      height: 65,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFF59E0B),
-            Color(0xFFFDE047),
-          ],
+  Widget _buildAddButton() {
+    return GestureDetector(
+      onTap: () {},
+      child: Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFF59E0B),
+              Color(0xFFFDE047),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(25),
+          border: Border.all(color: Colors.white, width: 2),
         ),
-        borderRadius: BorderRadius.circular(32.5),
-        border: Border.all(color: Colors.white, width: 4),
-      ),
-      child: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         child: const Icon(
           Icons.add,
           color: Colors.white,
-          size: 28,
+          size: 24,
         ),
       ),
     );

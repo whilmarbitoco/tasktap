@@ -1,10 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import '../models/task.dart';
 
 class TaskCard extends StatelessWidget {
   final Task task;
+  final double? userLatitude;
+  final double? userLongitude;
 
-  const TaskCard({super.key, required this.task});
+  const TaskCard({
+    super.key,
+    required this.task,
+    this.userLatitude,
+    this.userLongitude,
+  });
+
+  String _calculateDistance() {
+    if (userLatitude == null || userLongitude == null || 
+        task.latitude == null || task.longitude == null) {
+      return '';
+    }
+    
+    double distanceInMeters = Geolocator.distanceBetween(
+      userLatitude!,
+      userLongitude!,
+      task.latitude!,
+      task.longitude!,
+    );
+    
+    double distanceInKm = distanceInMeters / 1000;
+    if (distanceInKm < 1) {
+      return '${distanceInMeters.round()}m away';
+    } else {
+      return '${distanceInKm.toStringAsFixed(1)}km away';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,11 +95,26 @@ class TaskCard extends StatelessWidget {
               children: [
                 Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
                 const SizedBox(width: 4),
-                Text(
-                  task.location,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        task.location,
+                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                      ),
+                      if (_calculateDistance().isNotEmpty)
+                        Text(
+                          _calculateDistance(),
+                          style: TextStyle(
+                            color: Theme.of(context).primaryColor,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-                const Spacer(),
                 Text(
                   '₱${task.price.toStringAsFixed(0)}',
                   style: TextStyle(

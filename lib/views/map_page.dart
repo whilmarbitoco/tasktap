@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import '../viewmodels/map_viewmodel.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -10,36 +11,25 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
-  final MapController _mapController = MapController();
-  
-  final List<Marker> _markers = [
-    Marker(
-      point: const LatLng(7.4479, 125.8072), // Tagum City center
-      width: 40,
-      height: 40,
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF59E0B),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white, width: 3),
-        ),
-        child: const Icon(Icons.task_alt, color: Colors.white, size: 20),
-      ),
-    ),
-    Marker(
-      point: const LatLng(7.4500, 125.8100),
-      width: 40,
-      height: 40,
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF59E0B),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white, width: 3),
-        ),
-        child: const Icon(Icons.cleaning_services, color: Colors.white, size: 20),
-      ),
-    ),
-  ];
+  late MapViewModel _viewModel;
+
+  @override
+  void initState() {
+    super.initState();
+    _viewModel = MapViewModel();
+    _viewModel.addListener(_onViewModelChanged);
+  }
+
+  @override
+  void dispose() {
+    _viewModel.removeListener(_onViewModelChanged);
+    _viewModel.dispose();
+    super.dispose();
+  }
+
+  void _onViewModelChanged() {
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,11 +62,11 @@ class _MapPageState extends State<MapPage> {
             child: const Icon(Icons.location_on, color: Color(0xFFF59E0B)),
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Tasks Near You',
                   style: TextStyle(
                     fontSize: 18,
@@ -84,8 +74,8 @@ class _MapPageState extends State<MapPage> {
                   ),
                 ),
                 Text(
-                  'Tagum City, Davao del Norte',
-                  style: TextStyle(
+                  _viewModel.locationText,
+                  style: const TextStyle(
                     color: Colors.grey,
                     fontSize: 14,
                   ),
@@ -93,14 +83,23 @@ class _MapPageState extends State<MapPage> {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey[200]!),
+          GestureDetector(
+            onTap: _viewModel.getCurrentLocation,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: _viewModel.isLoading ? Colors.grey[300] : Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[200]!),
+              ),
+              child: _viewModel.isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.my_location, color: Color(0xFFF59E0B)),
             ),
-            child: const Icon(Icons.my_location, color: Color(0xFFF59E0B)),
           ),
         ],
       ),
@@ -117,9 +116,9 @@ class _MapPageState extends State<MapPage> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: FlutterMap(
-          mapController: _mapController,
+          mapController: _viewModel.mapController,
           options: const MapOptions(
-            initialCenter: LatLng(7.4479, 125.8072), // Tagum City
+            initialCenter: LatLng(7.4479, 125.8072),
             initialZoom: 14.0,
           ),
           children: [
@@ -127,7 +126,7 @@ class _MapPageState extends State<MapPage> {
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
               userAgentPackageName: 'com.example.flutter_project',
             ),
-            MarkerLayer(markers: _markers),
+            MarkerLayer(markers: _viewModel.markers),
           ],
         ),
       ),
@@ -150,13 +149,17 @@ class _MapPageState extends State<MapPage> {
           const SizedBox(height: 12),
           SizedBox(
             height: 80,
-            child: ListView(
+            child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              children: [
-                _buildTaskChip('Grocery Shopping', '₱150', Icons.shopping_cart),
-                _buildTaskChip('House Cleaning', '₱800', Icons.cleaning_services),
-                _buildTaskChip('Pet Walking', '₱200', Icons.pets),
-              ],
+              itemCount: _viewModel.nearbyTasks.length,
+              itemBuilder: (context, index) {
+                final task = _viewModel.nearbyTasks[index];
+                return _buildTaskChip(
+                  task.title,
+                  '₱${task.price.toInt()}',
+                  task.category == 'Delivery' ? Icons.shopping_cart : Icons.cleaning_services,
+                );
+              },
             ),
           ),
         ],

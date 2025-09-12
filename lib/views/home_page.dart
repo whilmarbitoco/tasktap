@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
-import '../models/task.dart';
+import '../viewmodels/home_viewmodel.dart';
 import '../widgets/task_card.dart';
-import '../widgets/search_bar_widget.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,52 +11,27 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final _searchController = TextEditingController();
-  String _selectedCategory = 'All';
-  final List<String> _categories = [
-    'All',
-    'Delivery',
-    'Cleaning',
-    'Tutoring',
-    'Repair',
-    'Other',
-  ];
+  late HomeViewModel _viewModel;
 
-  final List<Task> _tasks = [
-    Task(
-      id: '1',
-      title: 'Grocery Shopping',
-      description:
-          'Need someone to buy groceries from SM Tagum. List will be provided.',
-      category: 'Delivery',
-      price: 150,
-      location: 'SM Tagum',
-      deadline: DateTime.now().add(const Duration(hours: 3)),
-      status: 'open',
-      postedBy: 'Maria Santos',
-    ),
-    Task(
-      id: '2',
-      title: 'House Cleaning',
-      description: 'Deep cleaning for 2-bedroom apartment. Supplies provided.',
-      category: 'Cleaning',
-      price: 800,
-      location: 'Apokon, Tagum',
-      deadline: DateTime.now().add(const Duration(days: 1)),
-      status: 'open',
-      postedBy: 'John Dela Cruz',
-    ),
-    Task(
-      id: '3',
-      title: 'Math Tutoring',
-      description: 'Need help with Grade 10 Mathematics. 2 hours session.',
-      category: 'Tutoring',
-      price: 300,
-      location: 'Magugpo, Tagum',
-      deadline: DateTime.now().add(const Duration(days: 2)),
-      status: 'open',
-      postedBy: 'Ana Reyes',
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _viewModel = HomeViewModel();
+    _viewModel.addListener(_onViewModelChanged);
+    _viewModel.getUserLocation();
+  }
+
+  @override
+  void dispose() {
+    _viewModel.removeListener(_onViewModelChanged);
+    _viewModel.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onViewModelChanged() {
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,8 +40,8 @@ class _HomePageState extends State<HomePage> {
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(),
             _buildSearchAndFilters(),
+            _buildHeader(),
             Expanded(child: _buildTaskList()),
           ],
         ),
@@ -222,9 +195,13 @@ class _HomePageState extends State<HomePage> {
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: _tasks.length,
+            itemCount: _viewModel.tasks.length,
             itemBuilder: (context, index) {
-              return TaskCard(task: _tasks[index]);
+              return TaskCard(
+                task: _viewModel.tasks[index],
+                userLatitude: _viewModel.userLatitude,
+                userLongitude: _viewModel.userLongitude,
+              );
             },
           ),
         ),
@@ -232,9 +209,4 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
 }

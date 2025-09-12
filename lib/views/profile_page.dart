@@ -1,8 +1,33 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
+import '../viewmodels/profile_viewmodel.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  late ProfileViewModel _viewModel;
+
+  @override
+  void initState() {
+    super.initState();
+    _viewModel = ProfileViewModel();
+    _viewModel.addListener(_onViewModelChanged);
+  }
+
+  @override
+  void dispose() {
+    _viewModel.removeListener(_onViewModelChanged);
+    _viewModel.dispose();
+    super.dispose();
+  }
+
+  void _onViewModelChanged() {
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -12,11 +37,10 @@ class ProfilePage extends StatelessWidget {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              _buildHeader(context),
-              _buildProfileInfo(context),
-              _buildStatsSection(context),
-              _buildMenuSection(context),
-              _buildLogoutButton(context),
+              _buildHeader(),
+              _buildProfileInfo(),
+              _buildStatsSection(),
+              _buildMenuSection(),
             ],
           ),
         ),
@@ -24,15 +48,11 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(20),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context),
-          ),
           const Spacer(),
           const Text(
             'Profile',
@@ -42,16 +62,29 @@ class ProfilePage extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {},
+          GestureDetector(
+            onTap: () => _viewModel.logout(context),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red[200]!),
+              ),
+              child: const Icon(
+                Icons.logout,
+                color: Colors.red,
+                size: 20,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildProfileInfo(BuildContext context) {
+  Widget _buildProfileInfo() {
+    final profile = _viewModel.userProfile;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(24),
@@ -102,43 +135,45 @@ class ProfilePage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          const Text(
-            'John Doe',
-            style: TextStyle(
+          Text(
+            profile['name'],
+            style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            'john.doe@email.com',
+            profile['email'],
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 16,
             ),
           ),
           const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Text(
-              'Verified Helper',
-              style: TextStyle(
-                color: Colors.green,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+          if (profile['isVerified'])
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Text(
+                'Verified Helper',
+                style: TextStyle(
+                  color: Colors.green,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildStatsSection(BuildContext context) {
+  Widget _buildStatsSection() {
+    final profile = _viewModel.userProfile;
     return Container(
       margin: const EdgeInsets.all(20),
       padding: const EdgeInsets.all(20),
@@ -150,9 +185,9 @@ class ProfilePage extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildStatItem('Tasks\nCompleted', '24', Icons.task_alt),
-          _buildStatItem('Rating', '4.8', Icons.star),
-          _buildStatItem('Earnings', '₱12,500', Icons.account_balance_wallet),
+          _buildStatItem('Tasks\nCompleted', '${profile['tasksCompleted']}', Icons.task_alt),
+          _buildStatItem('Rating', '${profile['rating']}', Icons.star),
+          _buildStatItem('Earnings', '₱${profile['earnings']}', Icons.account_balance_wallet),
         ],
       ),
     );
@@ -183,22 +218,22 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuSection(BuildContext context) {
+  Widget _buildMenuSection() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
+      margin: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey[200]!),
       ),
       child: Column(
-        children: [
-          _buildMenuItem(Icons.history, 'Task History', () {}),
-          _buildMenuItem(Icons.payment, 'Payment Methods', () {}),
-          _buildMenuItem(Icons.notifications, 'Notifications', () {}),
-          _buildMenuItem(Icons.help_outline, 'Help & Support', () {}),
-          _buildMenuItem(Icons.privacy_tip_outlined, 'Privacy Policy', () {}),
-        ],
+        children: _viewModel.menuItems
+            .map((item) => _buildMenuItem(
+                  item['icon'],
+                  item['title'],
+                  () {},
+                ))
+            .toList(),
       ),
     );
   }
@@ -212,40 +247,5 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildLogoutButton(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(20),
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: () async {
-          await AuthService().signOut();
-          Navigator.of(context).pushReplacementNamed('/login');
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red[50],
-          foregroundColor: Colors.red,
-          elevation: 0,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: Colors.red.withOpacity(0.3)),
-          ),
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.logout, size: 20),
-            SizedBox(width: 8),
-            Text(
-              'Logout',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
 }

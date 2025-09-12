@@ -8,6 +8,8 @@ class Task {
   final DateTime deadline;
   final String status;
   final String postedBy;
+  final double? latitude;
+  final double? longitude;
 
   Task({
     required this.id,
@@ -19,5 +21,7 @@ class Task {
     required this.deadline,
     required this.status,
     required this.postedBy,
+    this.latitude,
+    this.longitude,
   });
 }
