@@ -14,13 +14,21 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final _searchController = TextEditingController();
   String _selectedCategory = 'All';
-  final List<String> _categories = ['All', 'Delivery', 'Cleaning', 'Tutoring', 'Repair', 'Other'];
-  
+  final List<String> _categories = [
+    'All',
+    'Delivery',
+    'Cleaning',
+    'Tutoring',
+    'Repair',
+    'Other',
+  ];
+
   final List<Task> _tasks = [
     Task(
       id: '1',
       title: 'Grocery Shopping',
-      description: 'Need someone to buy groceries from SM Tagum. List will be provided.',
+      description:
+          'Need someone to buy groceries from SM Tagum. List will be provided.',
       category: 'Delivery',
       price: 150,
       location: 'SM Tagum',
@@ -65,15 +73,12 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigation(),
-      floatingActionButton: _buildFloatingActionButton(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(10),
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
@@ -102,11 +107,7 @@ class _HomePageState extends State<HomePage> {
                 color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Icon(
-                Icons.task_alt,
-                color: Colors.white,
-                size: 28,
-              ),
+              child: const Icon(Icons.task_alt, color: Colors.white, size: 28),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -138,7 +139,10 @@ class _HomePageState extends State<HomePage> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: IconButton(
-                icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: Colors.white,
+                ),
                 onPressed: () {},
               ),
             ),
@@ -180,7 +184,10 @@ class _HomePageState extends State<HomePage> {
                       hintStyle: TextStyle(color: Colors.grey[500]),
                       prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
                       border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
                     ),
                   ),
                 ),
@@ -222,116 +229,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildBottomNavigation() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8,
-        color: Colors.white,
-        elevation: 0,
-        child: SizedBox(
-          height: 60,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(Icons.home, 'Home', true),
-              _buildNavItem(Icons.search, 'Search', false),
-              const SizedBox(width: 40), // Space for FAB
-              _buildNavItem(Icons.chat_bubble_outline, 'Messages', false),
-              _buildNavItem(Icons.person_outline, 'Profile', false),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, String label, bool isActive) {
-    return GestureDetector(
-      onTap: () {
-        if (label == 'Profile') {
-          Navigator.pushNamed(context, '/profile');
-        }
-      },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isActive ? Theme.of(context).primaryColor : Colors.grey[600],
-            size: 24,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: isActive ? Theme.of(context).primaryColor : Colors.grey[600],
-              fontSize: 12,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFloatingActionButton() {
-    return Container(
-      width: 65,
-      height: 65,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Theme.of(context).primaryColor,
-            Theme.of(context).primaryColor.withOpacity(0.7),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(32.5),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).primaryColor.withOpacity(0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: Colors.white.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(-2, -2),
-          ),
-        ],
-      ),
-      child: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: const EdgeInsets.all(8),
-          child: const Icon(
-            Icons.add,
-            color: Colors.white,
-            size: 24,
-          ),
-        ),
-      ),
     );
   }
 
