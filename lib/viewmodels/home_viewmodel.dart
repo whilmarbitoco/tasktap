@@ -1,105 +1,70 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import '../models/task.dart';
+import '../repositories/task_repository.dart';
+import '../repositories/user_repository.dart';
+import '../services/migration_service.dart';
 
 class HomeViewModel extends ChangeNotifier {
+  final TaskRepository _taskRepository;
+  final UserRepository _userRepository;
+  late final MigrationService _migrationService;
+
   double? _userLatitude;
   double? _userLongitude;
   bool _isLoadingLocation = false;
+  List<Task> _tasks = [];
+  bool _isLoadingTasks = false;
+
+  HomeViewModel(this._taskRepository, this._userRepository) {
+    _migrationService = MigrationService(_userRepository, _taskRepository);
+    _loadTasks();
+  }
 
   double? get userLatitude => _userLatitude;
   double? get userLongitude => _userLongitude;
   bool get isLoadingLocation => _isLoadingLocation;
-
-  final List<Task> _tasks = [
-    Task(
-      id: '1',
-      title: 'Grocery Shopping',
-      description: 'Need someone to buy groceries from SM Tagum. List will be provided.',
-      category: 'Home & Errands',
-      price: 150,
-      location: 'SM Tagum, Pioneer Avenue',
-      deadline: DateTime.now().add(const Duration(hours: 3)),
-      status: 'open',
-      postedBy: 'Maria Santos',
-      latitude: 7.4479,
-      longitude: 125.8072,
-    ),
-    Task(
-      id: '2',
-      title: 'House Cleaning',
-      description: 'Deep cleaning for 2-bedroom apartment. Supplies provided.',
-      category: 'Home & Errands',
-      price: 800,
-      location: 'Apokon, Tagum City',
-      deadline: DateTime.now().add(const Duration(days: 1)),
-      status: 'open',
-      postedBy: 'John Dela Cruz',
-      latitude: 7.4500,
-      longitude: 125.8100,
-    ),
-    Task(
-      id: '3',
-      title: 'Math Tutoring',
-      description: 'Need help with Grade 10 Mathematics. 2 hours session.',
-      category: 'Learning & Tutoring',
-      price: 300,
-      location: 'Magugpo East, Tagum City',
-      deadline: DateTime.now().add(const Duration(days: 2)),
-      status: 'open',
-      postedBy: 'Ana Reyes',
-      latitude: 7.4520,
-      longitude: 125.8150,
-    ),
-    Task(
-      id: '4',
-      title: 'Appliance Repair',
-      description: 'Fix washing machine that won\'t drain properly.',
-      category: 'Repairs & Maintenance',
-      price: 500,
-      location: 'Mankilam, Tagum City',
-      deadline: DateTime.now().add(const Duration(hours: 6)),
-      status: 'open',
-      postedBy: 'Carlos Mendoza',
-      latitude: 7.4450,
-      longitude: 125.8050,
-    ),
-    Task(
-      id: '5',
-      title: 'Pet Walking',
-      description: 'Walk my Golden Retriever for 1 hour in the morning.',
-      category: 'Care & Personal Assistance',
-      price: 200,
-      location: 'New Visayas, Tagum City',
-      deadline: DateTime.now().add(const Duration(hours: 12)),
-      status: 'open',
-      postedBy: 'Lisa Garcia',
-      latitude: 7.4480,
-      longitude: 125.8120,
-    ),
-    Task(
-      id: '6',
-      title: 'Event Setup',
-      description: 'Help setup birthday party decorations and tables.',
-      category: 'Events & Miscellaneous',
-      price: 400,
-      location: 'Pagsabangan, Tagum City',
-      deadline: DateTime.now().add(const Duration(days: 3)),
-      status: 'open',
-      postedBy: 'Miguel Torres',
-      latitude: 7.4510,
-      longitude: 125.8080,
-    ),
-  ];
+  bool get isLoadingTasks => _isLoadingTasks;
 
   List<Task> get tasks => _tasks;
 
+  Future<void> _loadTasks() async {
+    _isLoadingTasks = true;
+    notifyListeners();
+
+    try {
+      _tasks = await _taskRepository.getAllTasks();
+    } catch (e) {
+      print(e);
+      _tasks = [];
+    }
+
+    _isLoadingTasks = false;
+    notifyListeners();
+  }
+
+  Future<void> addTask(Task task) async {
+    try {
+      await _taskRepository.createTask(task);
+      _tasks.add(task);
+      notifyListeners();
+    } catch (e) {
+      throw Exception('Failed to create task');
+    }
+  }
+
+  Future<void> refreshTasks() async {
+    await _loadTasks();
+  }
+
   List<Task> get suggestedTasks {
-    // Simulate user's previous task history for suggestions
-    return [
-      _tasks[0], // Grocery Shopping
-      _tasks[4], // Pet Walking
-    ];
+    if (_tasks.isEmpty) return [];
+
+    final suggestions = <Task>[];
+    if (_tasks.length > 0) suggestions.add(_tasks[0]);
+    if (_tasks.length > 4) suggestions.add(_tasks[4]);
+
+    return suggestions;
   }
 
   Map<String, List<Task>> get tasksByCategory {
@@ -115,7 +80,7 @@ class HomeViewModel extends ChangeNotifier {
 
   static const List<String> categories = [
     'Home & Errands',
-    'Repairs & Maintenance', 
+    'Repairs & Maintenance',
     'Learning & Tutoring',
     'Care & Personal Assistance',
     'Events & Miscellaneous',

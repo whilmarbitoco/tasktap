@@ -19,7 +19,10 @@ class TaskDetailPage extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Task Details', style: TextStyle(color: Colors.black)),
+        title: const Text(
+          'Task Details',
+          style: TextStyle(color: Colors.black),
+        ),
       ),
       body: Column(
         children: [
@@ -70,7 +73,10 @@ class TaskDetailPage extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF59E0B),
                   borderRadius: BorderRadius.circular(20),
@@ -124,10 +130,7 @@ class TaskDetailPage extends StatelessWidget {
         children: [
           const Text(
             'Posted by',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           Row(
@@ -136,7 +139,7 @@ class TaskDetailPage extends StatelessWidget {
                 radius: 25,
                 backgroundColor: const Color(0xFFF59E0B),
                 child: Text(
-                  task.postedBy[0].toUpperCase(),
+                  task.postedByUserId[0].toUpperCase(),
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -150,7 +153,7 @@ class TaskDetailPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      task.postedBy,
+                      task.postedByUserId,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -161,7 +164,10 @@ class TaskDetailPage extends StatelessWidget {
                       children: [
                         Icon(Icons.star, size: 16, color: Colors.amber[600]),
                         const SizedBox(width: 4),
-                        const Text('4.8 (23 reviews)', style: TextStyle(color: Colors.grey)),
+                        const Text(
+                          '4.8 (23 reviews)',
+                          style: TextStyle(color: Colors.grey),
+                        ),
                       ],
                     ),
                   ],
@@ -192,10 +198,7 @@ class TaskDetailPage extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: FlutterMap(
-          options: MapOptions(
-            initialCenter: taskLocation,
-            initialZoom: 15.0,
-          ),
+          options: MapOptions(initialCenter: taskLocation, initialZoom: 15.0),
           children: [
             TileLayer(
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -213,7 +216,11 @@ class TaskDetailPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: Colors.white, width: 3),
                     ),
-                    child: const Icon(Icons.location_on, color: Colors.white, size: 20),
+                    child: const Icon(
+                      Icons.location_on,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                 ),
               ],
@@ -237,15 +244,16 @@ class TaskDetailPage extends StatelessWidget {
         children: [
           const Text(
             'Task Details',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           _buildDetailRow(Icons.location_on, 'Location', task.location),
           const SizedBox(height: 12),
-          _buildDetailRow(Icons.attach_money, 'Payment', '₱${task.price.toStringAsFixed(0)}'),
+          _buildDetailRow(
+            Icons.attach_money,
+            'Payment',
+            '₱${task.price.toStringAsFixed(0)}',
+          ),
           const SizedBox(height: 12),
           _buildDetailRow(Icons.schedule, 'Status', task.status.toUpperCase()),
         ],
@@ -268,9 +276,7 @@ class TaskDetailPage extends StatelessWidget {
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.w600),
           ),
         ),
       ],
@@ -350,7 +356,7 @@ class TaskDetailPage extends StatelessWidget {
   String _formatDeadline(DateTime deadline) {
     final now = DateTime.now();
     final difference = deadline.difference(now);
-    
+
     if (difference.inDays > 0) {
       return '${difference.inDays} days';
     } else if (difference.inHours > 0) {

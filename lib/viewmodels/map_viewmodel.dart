@@ -29,7 +29,7 @@ class MapViewModel extends ChangeNotifier {
       location: 'SM Tagum',
       deadline: DateTime.now().add(const Duration(hours: 3)),
       status: 'open',
-      postedBy: 'Maria Santos',
+      postedByUserId: 'Maria Santos',
     ),
     Task(
       id: '2',
@@ -40,7 +40,7 @@ class MapViewModel extends ChangeNotifier {
       location: 'Apokon, Tagum',
       deadline: DateTime.now().add(const Duration(days: 1)),
       status: 'open',
-      postedBy: 'John Dela Cruz',
+      postedByUserId: 'John Dela Cruz',
     ),
   ];
 
@@ -108,7 +108,11 @@ class MapViewModel extends ChangeNotifier {
                     ),
                   ],
                 ),
-                child: const Icon(Icons.my_location, color: Colors.white, size: 20),
+                child: const Icon(
+                  Icons.my_location,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
             ],
           ),
@@ -143,7 +147,7 @@ class MapViewModel extends ChangeNotifier {
 
       Position position = await Geolocator.getCurrentPosition();
       _currentLocation = LatLng(position.latitude, position.longitude);
-      
+
       // Get street address with barangay
       try {
         List<Placemark> placemarks = await placemarkFromCoordinates(
@@ -154,7 +158,7 @@ class MapViewModel extends ChangeNotifier {
           final place = placemarks.first;
           String street = place.street ?? '';
           String barangay = place.subLocality ?? place.locality ?? '';
-          
+
           if (street.isNotEmpty && barangay.isNotEmpty) {
             _locationText = '$street, $barangay';
           } else if (barangay.isNotEmpty) {
@@ -168,7 +172,7 @@ class MapViewModel extends ChangeNotifier {
       } catch (e) {
         _locationText = 'Current Location';
       }
-      
+
       mapController.move(_currentLocation!, 15.0);
     } catch (e) {
       // Handle error silently

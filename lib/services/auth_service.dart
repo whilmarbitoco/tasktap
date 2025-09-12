@@ -1,11 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../repositories/user_repository.dart';
+import '../models/user.dart' as app_user;
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   late final GoogleSignIn _googleSignIn;
+  final UserRepository _userRepository;
 
-  AuthService() {
+  AuthService(this._userRepository) {
     _googleSignIn = GoogleSignIn();
   }
 
@@ -30,7 +33,7 @@ class AuthService {
     }
   }
 
-  Future<User?> signUpWithEmail(String email, String password) async {
+  Future<User?> signUpWithEmail(String email, String password, String name) async {
     try {
       if (email.isEmpty || password.isEmpty) {
         throw 'Please fill in all fields';
@@ -44,6 +47,11 @@ class AuthService {
         password: password,
       );
       print('Account created successfully: ${credential.user?.email}');
+      
+      if (credential.user != null) {
+        await _createUserRecord(credential.user!, name);
+      }
+      
       return credential.user;
     } on FirebaseAuthException catch (e) {
       print('Firebase Auth Error: ${e.code} - ${e.message}');
@@ -76,6 +84,14 @@ class AuthService {
       print(
         'Firebase authentication successful: ${userCredential.user?.email}',
       );
+      
+      if (userCredential.user != null) {
+        final existingUser = await _userRepository.getUser(userCredential.user!.uid);
+        if (existingUser == null) {
+          await _createUserRecord(userCredential.user!, userCredential.user!.displayName ?? 'User');
+        }
+      }
+      
       return userCredential.user;
     } on FirebaseAuthException catch (e) {
       print('Firebase Auth Error: ${e.code} - ${e.message}');
@@ -104,6 +120,19 @@ class AuthService {
   Future<void> signOut() async {
     await _auth.signOut();
     await _googleSignIn.signOut();
+  }
+
+  Future<void> _createUserRecord(User firebaseUser, String name) async {
+    final user = app_user.User(
+      id: firebaseUser.uid,
+      name: name,
+      email: firebaseUser.email ?? '',
+      phone: firebaseUser.phoneNumber,
+      profileImageUrl: firebaseUser.photoURL,
+      createdAt: DateTime.now(),
+    );
+    
+    await _userRepository.createUser(user);
   }
 
   String _getAuthErrorMessage(String code) {

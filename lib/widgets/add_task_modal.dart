@@ -3,7 +3,10 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../viewmodels/home_viewmodel.dart';
+import '../models/task.dart';
 
 class AddTaskModal extends StatefulWidget {
   const AddTaskModal({super.key});
@@ -17,7 +20,7 @@ class _AddTaskModalState extends State<AddTaskModal> {
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   final _mapController = MapController();
-  
+
   String _selectedCategory = HomeViewModel.categories.first;
   LatLng _selectedLocation = const LatLng(7.4479, 125.8072);
   String _locationText = 'Tagum City, Davao del Norte';
@@ -56,11 +59,19 @@ class _AddTaskModalState extends State<AddTaskModal> {
                 children: [
                   _buildTextField('Task Title', _titleController),
                   const SizedBox(height: 16),
-                  _buildTextField('Description', _descriptionController, maxLines: 3),
+                  _buildTextField(
+                    'Description',
+                    _descriptionController,
+                    maxLines: 3,
+                  ),
                   const SizedBox(height: 16),
                   _buildCategoryDropdown(),
                   const SizedBox(height: 16),
-                  _buildTextField('Price (₱)', _priceController, keyboardType: TextInputType.number),
+                  _buildTextField(
+                    'Price (₱)',
+                    _priceController,
+                    keyboardType: TextInputType.number,
+                  ),
                   const SizedBox(height: 16),
                   _buildLocationSection(),
                   const SizedBox(height: 100),
@@ -80,9 +91,7 @@ class _AddTaskModalState extends State<AddTaskModal> {
                 ),
               ],
             ),
-            child: SafeArea(
-              child: _buildCreateButton(),
-            ),
+            child: SafeArea(child: _buildCreateButton()),
           ),
         ],
       ),
@@ -99,10 +108,7 @@ class _AddTaskModalState extends State<AddTaskModal> {
         children: [
           const Text(
             'Create New Task',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const Spacer(),
           GestureDetector(
@@ -121,16 +127,18 @@ class _AddTaskModalState extends State<AddTaskModal> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {int maxLines = 1, TextInputType? keyboardType}) {
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    int maxLines = 1,
+    TextInputType? keyboardType,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -163,10 +171,7 @@ class _AddTaskModalState extends State<AddTaskModal> {
       children: [
         const Text(
           'Category',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
         Container(
@@ -215,16 +220,16 @@ class _AddTaskModalState extends State<AddTaskModal> {
           children: [
             const Text(
               'Location',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const Spacer(),
             GestureDetector(
               onTap: _getCurrentLocation,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF59E0B),
                   borderRadius: BorderRadius.circular(20),
@@ -242,7 +247,11 @@ class _AddTaskModalState extends State<AddTaskModal> {
                         ),
                       )
                     else
-                      const Icon(Icons.my_location, size: 12, color: Colors.white),
+                      const Icon(
+                        Icons.my_location,
+                        size: 12,
+                        color: Colors.white,
+                      ),
                     const SizedBox(width: 4),
                     const Text(
                       'Use Current',
@@ -261,10 +270,7 @@ class _AddTaskModalState extends State<AddTaskModal> {
         const SizedBox(height: 8),
         Text(
           _locationText,
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 14,
-          ),
+          style: TextStyle(color: Colors.grey[600], fontSize: 14),
         ),
         const SizedBox(height: 12),
         Container(
@@ -304,7 +310,11 @@ class _AddTaskModalState extends State<AddTaskModal> {
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(color: Colors.white, width: 3),
                         ),
-                        child: const Icon(Icons.location_on, color: Colors.white, size: 20),
+                        child: const Icon(
+                          Icons.location_on,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ),
                     ),
                   ],
@@ -368,11 +378,11 @@ class _AddTaskModalState extends State<AddTaskModal> {
 
       Position position = await Geolocator.getCurrentPosition();
       final location = LatLng(position.latitude, position.longitude);
-      
+
       setState(() {
         _selectedLocation = location;
       });
-      
+
       _mapController.move(location, 15.0);
       await _updateLocationText(location);
     } catch (e) {
@@ -394,7 +404,7 @@ class _AddTaskModalState extends State<AddTaskModal> {
         final place = placemarks.first;
         String street = place.street ?? '';
         String barangay = place.subLocality ?? place.locality ?? '';
-        
+
         if (street.isNotEmpty && barangay.isNotEmpty) {
           _locationText = '$street, $barangay';
         } else if (barangay.isNotEmpty) {
@@ -411,7 +421,7 @@ class _AddTaskModalState extends State<AddTaskModal> {
     setState(() {});
   }
 
-  void _createTask() {
+  void _createTask() async {
     if (_titleController.text.trim().isEmpty ||
         _descriptionController.text.trim().isEmpty ||
         _priceController.text.trim().isEmpty) {
@@ -421,9 +431,45 @@ class _AddTaskModalState extends State<AddTaskModal> {
       return;
     }
 
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Task created successfully!')),
-    );
+    final price = double.tryParse(_priceController.text.trim());
+    if (price == null || price <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid price')),
+      );
+      return;
+    }
+
+    try {
+      final task = Task(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        title: _titleController.text.trim(),
+        description: _descriptionController.text.trim(),
+        category: _selectedCategory,
+        price: price,
+        location: _locationText,
+        deadline: DateTime.now().add(const Duration(days: 1)),
+        status: 'open',
+        postedByUserId: FirebaseAuth.instance.currentUser?.uid ?? '',
+        latitude: _selectedLocation.latitude,
+        longitude: _selectedLocation.longitude,
+      );
+
+      await context.read<HomeViewModel>().addTask(task);
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Task created successfully!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to create task. Please try again.'),
+          ),
+        );
+      }
+    }
   }
 }

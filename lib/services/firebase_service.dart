@@ -1,0 +1,1 @@
+// This file is no longer needed - Firebase operations moved to repository

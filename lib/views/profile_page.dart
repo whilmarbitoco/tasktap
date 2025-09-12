@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../viewmodels/profile_viewmodel.dart';
 import 'notifications_page.dart';
 import 'task_history_page.dart';
@@ -11,25 +12,6 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  late ProfileViewModel _viewModel;
-
-  @override
-  void initState() {
-    super.initState();
-    _viewModel = ProfileViewModel();
-    _viewModel.addListener(_onViewModelChanged);
-  }
-
-  @override
-  void dispose() {
-    _viewModel.removeListener(_onViewModelChanged);
-    _viewModel.dispose();
-    super.dispose();
-  }
-
-  void _onViewModelChanged() {
-    if (mounted) setState(() {});
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +68,9 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildProfileInfo() {
-    final profile = _viewModel.userProfile;
+    return Consumer<ProfileViewModel>(
+      builder: (context, viewModel, child) {
+        final profile = viewModel.userProfile;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(24),
@@ -172,10 +156,14 @@ class _ProfilePageState extends State<ProfilePage> {
         ],
       ),
     );
+      },
+    );
   }
 
   Widget _buildStatsSection() {
-    final profile = _viewModel.userProfile;
+    return Consumer<ProfileViewModel>(
+      builder: (context, viewModel, child) {
+        final profile = viewModel.userProfile;
     return Container(
       margin: const EdgeInsets.all(20),
       padding: const EdgeInsets.all(20),
@@ -192,6 +180,8 @@ class _ProfilePageState extends State<ProfilePage> {
           _buildStatItem('Earnings', '₱${profile['earnings']}', Icons.account_balance_wallet),
         ],
       ),
+    );
+      },
     );
   }
 
@@ -234,7 +224,7 @@ class _ProfilePageState extends State<ProfilePage> {
           _buildMenuItem(Icons.notifications, 'Notifications', () => _showNotifications()),
           _buildMenuItem(Icons.help, 'Help & Support', () => _showHelpSupport()),
           _buildMenuItem(Icons.privacy_tip, 'Privacy Policy', () => _showPrivacyPolicy()),
-          _buildMenuItem(Icons.logout, 'Logout', () => _viewModel.logout(context), isLogout: true),
+          _buildMenuItem(Icons.logout, 'Logout', () => context.read<ProfileViewModel>().logout(context), isLogout: true),
         ],
       ),
     );

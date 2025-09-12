@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/google_sign_in_button.dart';
 import '../services/auth_service.dart';
+import '../repositories/user_repository.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -17,10 +19,16 @@ class _SignUpPageState extends State<SignUpPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _authService = AuthService();
+  late final AuthService _authService;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _authService = AuthService(context.read<UserRepository>());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -158,6 +166,7 @@ class _SignUpPageState extends State<SignUpPage> {
       final user = await _authService.signUpWithEmail(
         _emailController.text.trim(),
         _passwordController.text,
+        _nameController.text.trim(),
       );
       if (user != null) {
         Navigator.pushReplacementNamed(context, '/home');

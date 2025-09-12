@@ -12,7 +12,7 @@ class TaskHistoryViewModel extends ChangeNotifier {
       location: 'Apokon, Tagum City',
       deadline: DateTime.now().subtract(const Duration(days: 3)),
       status: 'completed',
-      postedBy: 'John Dela Cruz',
+      postedByUserId: 'John Dela Cruz',
       latitude: 7.4500,
       longitude: 125.8100,
     ),
@@ -25,7 +25,7 @@ class TaskHistoryViewModel extends ChangeNotifier {
       location: 'Magugpo East, Tagum City',
       deadline: DateTime.now().subtract(const Duration(days: 7)),
       status: 'completed',
-      postedBy: 'Ana Reyes',
+      postedByUserId: 'Ana Reyes',
       latitude: 7.4520,
       longitude: 125.8150,
     ),
@@ -38,7 +38,7 @@ class TaskHistoryViewModel extends ChangeNotifier {
       location: 'New Visayas, Tagum City',
       deadline: DateTime.now().subtract(const Duration(days: 10)),
       status: 'completed',
-      postedBy: 'Lisa Garcia',
+      postedByUserId: 'Lisa Garcia',
       latitude: 7.4480,
       longitude: 125.8120,
     ),
@@ -51,7 +51,7 @@ class TaskHistoryViewModel extends ChangeNotifier {
       location: 'Pagsabangan, Tagum City',
       deadline: DateTime.now().subtract(const Duration(days: 14)),
       status: 'completed',
-      postedBy: 'Miguel Torres',
+      postedByUserId: 'Miguel Torres',
       latitude: 7.4510,
       longitude: 125.8080,
     ),
@@ -59,7 +59,8 @@ class TaskHistoryViewModel extends ChangeNotifier {
 
   List<Task> get completedTasks => _completedTasks;
 
-  double get totalEarnings => _completedTasks.fold(0, (sum, task) => sum + task.price);
+  double get totalEarnings =>
+      _completedTasks.fold(0, (sum, task) => sum + task.price);
 
   int get totalTasksCompleted => _completedTasks.length;
 
@@ -74,7 +75,7 @@ class TaskHistoryViewModel extends ChangeNotifier {
   String formatCompletedDate(DateTime deadline) {
     final now = DateTime.now();
     final difference = now.difference(deadline);
-    
+
     if (difference.inDays > 0) {
       return '${difference.inDays} days ago';
     } else if (difference.inHours > 0) {

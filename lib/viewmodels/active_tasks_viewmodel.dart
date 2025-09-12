@@ -3,9 +3,9 @@ import '../models/task.dart';
 
 class ActiveTasksViewModel extends ChangeNotifier {
   String _selectedFilter = 'all';
-  
+
   String get selectedFilter => _selectedFilter;
-  
+
   final List<Task> _activeTasks = [
     Task(
       id: '1',
@@ -16,7 +16,7 @@ class ActiveTasksViewModel extends ChangeNotifier {
       location: 'SM Tagum, Pioneer Avenue',
       deadline: DateTime.now().add(const Duration(hours: 2)),
       status: 'in_progress',
-      postedBy: 'Maria Santos',
+      postedByUserId: 'Maria Santos',
       latitude: 7.4479,
       longitude: 125.8072,
     ),
@@ -29,7 +29,7 @@ class ActiveTasksViewModel extends ChangeNotifier {
       location: 'New Visayas, Tagum City',
       deadline: DateTime.now().add(const Duration(hours: 8)),
       status: 'pending',
-      postedBy: 'Lisa Garcia',
+      postedByUserId: 'Lisa Garcia',
       latitude: 7.4480,
       longitude: 125.8120,
     ),
@@ -42,7 +42,7 @@ class ActiveTasksViewModel extends ChangeNotifier {
       location: 'Apokon, Tagum City',
       deadline: DateTime.now().add(const Duration(days: 1)),
       status: 'completed',
-      postedBy: 'John Dela Cruz',
+      postedByUserId: 'John Dela Cruz',
       latitude: 7.4500,
       longitude: 125.8100,
     ),
@@ -50,11 +50,13 @@ class ActiveTasksViewModel extends ChangeNotifier {
 
   List<Task> get activeTasks {
     if (_selectedFilter == 'all') return _activeTasks;
-    return _activeTasks.where((task) => task.status == _selectedFilter).toList();
+    return _activeTasks
+        .where((task) => task.status == _selectedFilter)
+        .toList();
   }
-  
+
   List<Task> get allTasks => _activeTasks;
-  
+
   void setFilter(String filter) {
     _selectedFilter = filter;
     notifyListeners();
@@ -72,7 +74,7 @@ class ActiveTasksViewModel extends ChangeNotifier {
         location: _activeTasks[taskIndex].location,
         deadline: _activeTasks[taskIndex].deadline,
         status: 'in_progress',
-        postedBy: _activeTasks[taskIndex].postedBy,
+        postedByUserId: _activeTasks[taskIndex].postedByUserId,
         latitude: _activeTasks[taskIndex].latitude,
         longitude: _activeTasks[taskIndex].longitude,
       );
@@ -88,7 +90,7 @@ class ActiveTasksViewModel extends ChangeNotifier {
   String formatDeadline(DateTime deadline) {
     final now = DateTime.now();
     final difference = deadline.difference(now);
-    
+
     if (difference.inDays > 0) {
       return '${difference.inDays} days';
     } else if (difference.inHours > 0) {

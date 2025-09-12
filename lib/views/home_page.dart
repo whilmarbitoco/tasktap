@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../viewmodels/home_viewmodel.dart';
 import '../widgets/task_card.dart';
 import '../models/task.dart';
@@ -13,26 +14,19 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final _searchController = TextEditingController();
-  late HomeViewModel _viewModel;
 
   @override
   void initState() {
     super.initState();
-    _viewModel = HomeViewModel();
-    _viewModel.addListener(_onViewModelChanged);
-    _viewModel.getUserLocation();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<HomeViewModel>().getUserLocation();
+    });
   }
 
   @override
   void dispose() {
-    _viewModel.removeListener(_onViewModelChanged);
-    _viewModel.dispose();
     _searchController.dispose();
     super.dispose();
-  }
-
-  void _onViewModelChanged() {
-    if (mounted) setState(() {});
   }
 
   @override
@@ -209,23 +203,36 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildTaskList() {
-    final tasksByCategory = _viewModel.tasksByCategory;
-    final suggestedTasks = _viewModel.suggestedTasks;
-    
-    if (tasksByCategory.isEmpty) {
-      return const Center(
-        child: Text(
-          'No tasks available',
-          style: TextStyle(fontSize: 16, color: Colors.grey),
-        ),
-      );
-    }
-    
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      itemCount: _getTotalItemCount(tasksByCategory, suggestedTasks),
-      itemBuilder: (context, index) {
-        return _buildItemAtIndex(tasksByCategory, suggestedTasks, index);
+    return Consumer<HomeViewModel>(
+      builder: (context, viewModel, child) {
+        if (viewModel.isLoadingTasks) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+        
+        final tasksByCategory = viewModel.tasksByCategory;
+        final suggestedTasks = viewModel.suggestedTasks;
+        
+        if (tasksByCategory.isEmpty) {
+          return const Center(
+            child: Text(
+              'No tasks available',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          );
+        }
+        
+        return RefreshIndicator(
+          onRefresh: () => viewModel.refreshTasks(),
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: _getTotalItemCount(tasksByCategory, suggestedTasks),
+            itemBuilder: (context, index) {
+              return _buildItemAtIndex(tasksByCategory, suggestedTasks, index, viewModel);
+            },
+          ),
+        );
       },
     );
   }
@@ -246,7 +253,7 @@ class _HomePageState extends State<HomePage> {
     return count;
   }
 
-  Widget _buildItemAtIndex(Map<String, List<Task>> tasksByCategory, List<Task> suggestedTasks, int index) {
+  Widget _buildItemAtIndex(Map<String, List<Task>> tasksByCategory, List<Task> suggestedTasks, int index, HomeViewModel viewModel) {
     int currentIndex = 0;
     
     if (suggestedTasks.isNotEmpty) {
@@ -260,8 +267,8 @@ class _HomePageState extends State<HomePage> {
         if (taskIndex >= 0 && taskIndex < suggestedTasks.length) {
           return TaskCard(
             task: suggestedTasks[taskIndex],
-            userLatitude: _viewModel.userLatitude,
-            userLongitude: _viewModel.userLongitude,
+            userLatitude: viewModel.userLatitude,
+            userLongitude: viewModel.userLongitude,
           );
         }
       }
@@ -281,8 +288,8 @@ class _HomePageState extends State<HomePage> {
           if (taskIndex >= 0 && taskIndex < tasks.length) {
             return TaskCard(
               task: tasks[taskIndex],
-              userLatitude: _viewModel.userLatitude,
-              userLongitude: _viewModel.userLongitude,
+              userLatitude: viewModel.userLatitude,
+              userLongitude: viewModel.userLongitude,
             );
           }
         }

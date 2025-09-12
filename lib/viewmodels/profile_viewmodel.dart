@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../repositories/user_repository.dart';
 
 class ProfileViewModel extends ChangeNotifier {
-  final AuthService _authService = AuthService();
+  final UserRepository _userRepository;
+  late final AuthService _authService;
   bool _isLoading = false;
+
+  ProfileViewModel(this._userRepository) {
+    _authService = AuthService(_userRepository);
+  }
 
   bool get isLoading => _isLoading;
 
