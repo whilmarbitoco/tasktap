@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'chat_page.dart';
 
 class MessagesPage extends StatelessWidget {
   const MessagesPage({super.key});
@@ -25,10 +26,7 @@ class MessagesPage extends StatelessWidget {
         children: [
           const Text(
             'Messages',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const Spacer(),
           Container(
@@ -78,98 +76,105 @@ class MessagesPage extends StatelessWidget {
       itemCount: messages.length,
       itemBuilder: (context, index) {
         final message = messages[index];
-        return _buildMessageItem(message);
+        return _buildMessageItem(context, message);
       },
     );
   }
 
-  Widget _buildMessageItem(Map<String, dynamic> message) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFF59E0B), Color(0xFFFDE047)],
-              ),
-              borderRadius: BorderRadius.circular(25),
-            ),
-            child: Center(
-              child: Text(
-                message['avatar'],
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
+  Widget _buildMessageItem(BuildContext context, Map<String, dynamic> message) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatPage(
+              userName: message['name'],
+              taskTitle: message['taskTitle'],
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      message['name'],
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      message['time'],
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  message['taskTitle'],
-                  style: TextStyle(
-                    color: const Color(0xFFF59E0B),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  message['message'],
-                  style: TextStyle(
-                    color: Colors.grey[700],
-                    fontSize: 14,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          if (message['unread'])
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[200]!),
+        ),
+        child: Row(
+          children: [
             Container(
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(
-                color: Color(0xFFF59E0B),
-                shape: BoxShape.circle,
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFF59E0B), Color(0xFFFDE047)],
+                ),
+                borderRadius: BorderRadius.circular(25),
+              ),
+              child: Center(
+                child: Text(
+                  message['avatar'],
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
               ),
             ),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        message['name'],
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        message['time'],
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    message['taskTitle'],
+                    style: TextStyle(
+                      color: const Color(0xFFF59E0B),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    message['message'],
+                    style: TextStyle(color: Colors.grey[700], fontSize: 14),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            if (message['unread'])
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF59E0B),
+                  shape: BoxShape.circle,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

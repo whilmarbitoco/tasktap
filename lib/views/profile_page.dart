@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../viewmodels/profile_viewmodel.dart';
+import 'notifications_page.dart';
+import 'task_history_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -63,17 +65,17 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           const Spacer(),
           GestureDetector(
-            onTap: () => _viewModel.logout(context),
+            onTap: () => _showEditProfileDialog(),
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.red[50],
+                color: const Color(0xFFF59E0B).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red[200]!),
+                border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.3)),
               ),
               child: const Icon(
-                Icons.logout,
-                color: Colors.red,
+                Icons.edit,
+                color: Color(0xFFF59E0B),
                 size: 20,
               ),
             ),
@@ -227,23 +229,100 @@ class _ProfilePageState extends State<ProfilePage> {
         border: Border.all(color: Colors.grey[200]!),
       ),
       child: Column(
-        children: _viewModel.menuItems
-            .map((item) => _buildMenuItem(
-                  item['icon'],
-                  item['title'],
-                  () {},
-                ))
-            .toList(),
+        children: [
+          _buildMenuItem(Icons.history, 'Task History', () => _showTaskHistory()),
+          _buildMenuItem(Icons.notifications, 'Notifications', () => _showNotifications()),
+          _buildMenuItem(Icons.help, 'Help & Support', () => _showHelpSupport()),
+          _buildMenuItem(Icons.privacy_tip, 'Privacy Policy', () => _showPrivacyPolicy()),
+          _buildMenuItem(Icons.logout, 'Logout', () => _viewModel.logout(context), isLogout: true),
+        ],
       ),
     );
   }
 
-  Widget _buildMenuItem(IconData icon, String title, VoidCallback onTap) {
+  Widget _buildMenuItem(IconData icon, String title, VoidCallback onTap, {bool isLogout = false}) {
     return ListTile(
-      leading: Icon(icon, color: Colors.grey[600]),
-      title: Text(title),
-      trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+      leading: Icon(
+        icon, 
+        color: isLogout ? Colors.red : Colors.grey[600],
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: isLogout ? Colors.red : Colors.black,
+        ),
+      ),
+      trailing: Icon(
+        Icons.chevron_right, 
+        color: isLogout ? Colors.red : Colors.grey,
+      ),
       onTap: onTap,
+    );
+  }
+
+  void _showEditProfileDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Profile'),
+        content: const Text('Profile editing feature coming soon!'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTaskHistory() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const TaskHistoryPage(),
+      ),
+    );
+  }
+
+  void _showNotifications() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const NotificationsPage(),
+      ),
+    );
+  }
+
+  void _showHelpSupport() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Help & Support'),
+        content: const Text('Help and support feature coming soon!'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPrivacyPolicy() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Privacy Policy'),
+        content: const Text('Privacy policy feature coming soon!'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
     );
   }
 

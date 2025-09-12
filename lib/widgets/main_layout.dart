@@ -3,6 +3,7 @@ import '../views/home_page.dart';
 import '../views/map_page.dart';
 import '../views/messages_page.dart';
 import '../views/profile_page.dart';
+import 'add_task_modal.dart';
 
 class MainLayout extends StatefulWidget {
   final int initialIndex;
@@ -63,13 +64,12 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
         child: SizedBox(
           height: 70,
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildNavItem(Icons.home, 'Home', 0),
-              _buildNavItem(Icons.map, 'Map', 1),
-              _buildAddButton(),
-              _buildNavItem(Icons.chat_bubble_outline, 'Messages', 2),
-              _buildNavItem(Icons.person_outline, 'Profile', 3),
+              Expanded(child: _buildNavItem(Icons.home, 'Home', 0)),
+              Expanded(child: _buildNavItem(Icons.map, 'Map', 1)),
+              Expanded(child: _buildAddButton()),
+              Expanded(child: _buildNavItem(Icons.chat_bubble_outline, 'Messages', 2)),
+              Expanded(child: _buildNavItem(Icons.person_outline, 'Profile', 3)),
             ],
           ),
         ),
@@ -90,7 +90,7 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               icon,
@@ -114,27 +114,46 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
 
   Widget _buildAddButton() {
     return GestureDetector(
-      onTap: () {},
-      child: Container(
-        width: 50,
-        height: 50,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFF59E0B),
-              Color(0xFFFDE047),
-            ],
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => const AddTaskModal(),
+        );
+      },
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFF59E0B),
+                  Color(0xFFFDE047),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(25),
+              border: Border.all(color: Colors.white, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFF59E0B).withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.add,
+              color: Colors.white,
+              size: 24,
+            ),
           ),
-          borderRadius: BorderRadius.circular(25),
-          border: Border.all(color: Colors.white, width: 2),
-        ),
-        child: const Icon(
-          Icons.add,
-          color: Colors.white,
-          size: 24,
-        ),
+        ],
       ),
     );
   }

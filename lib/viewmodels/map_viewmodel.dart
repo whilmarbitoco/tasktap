@@ -9,7 +9,11 @@ class MapViewModel extends ChangeNotifier {
   final MapController mapController = MapController();
   LatLng? _currentLocation;
   bool _isLoading = false;
-  String _locationText = 'Tagum City, Davao del Norte';
+  String _locationText = 'Getting location...';
+
+  MapViewModel() {
+    getCurrentLocation();
+  }
 
   LatLng? get currentLocation => _currentLocation;
   bool get isLoading => _isLoading;
@@ -20,7 +24,7 @@ class MapViewModel extends ChangeNotifier {
       id: '1',
       title: 'Grocery Shopping',
       description: 'Need someone to buy groceries from SM Tagum',
-      category: 'Delivery',
+      category: 'Home & Errands',
       price: 150,
       location: 'SM Tagum',
       deadline: DateTime.now().add(const Duration(hours: 3)),
@@ -31,7 +35,7 @@ class MapViewModel extends ChangeNotifier {
       id: '2',
       title: 'House Cleaning',
       description: 'Deep cleaning for 2-bedroom apartment',
-      category: 'Cleaning',
+      category: 'Home & Errands',
       price: 800,
       location: 'Apokon, Tagum',
       deadline: DateTime.now().add(const Duration(days: 1)),
@@ -54,7 +58,7 @@ class MapViewModel extends ChangeNotifier {
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.white, width: 3),
           ),
-          child: const Icon(Icons.shopping_cart, color: Colors.white, size: 20),
+          child: const Icon(Icons.home, color: Colors.white, size: 20),
         ),
       ),
       Marker(
@@ -67,7 +71,7 @@ class MapViewModel extends ChangeNotifier {
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.white, width: 3),
           ),
-          child: const Icon(Icons.cleaning_services, color: Colors.white, size: 20),
+          child: const Icon(Icons.home, color: Colors.white, size: 20),
         ),
       ),
     ];
@@ -76,15 +80,37 @@ class MapViewModel extends ChangeNotifier {
       taskMarkers.add(
         Marker(
           point: _currentLocation!,
-          width: 50,
-          height: 50,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.blue,
-              borderRadius: BorderRadius.circular(25),
-              border: Border.all(color: Colors.white, width: 4),
-            ),
-            child: const Icon(Icons.person, color: Colors.white, size: 24),
+          width: 60,
+          height: 60,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white, width: 3),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.withOpacity(0.3),
+                      blurRadius: 8,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.my_location, color: Colors.white, size: 20),
+              ),
+            ],
           ),
         ),
       );
@@ -118,7 +144,7 @@ class MapViewModel extends ChangeNotifier {
       Position position = await Geolocator.getCurrentPosition();
       _currentLocation = LatLng(position.latitude, position.longitude);
       
-      // Get street address
+      // Get street address with barangay
       try {
         List<Placemark> placemarks = await placemarkFromCoordinates(
           position.latitude,
@@ -126,7 +152,16 @@ class MapViewModel extends ChangeNotifier {
         );
         if (placemarks.isNotEmpty) {
           final place = placemarks.first;
-          _locationText = '${place.street}, ${place.locality}';
+          String street = place.street ?? '';
+          String barangay = place.subLocality ?? place.locality ?? '';
+          
+          if (street.isNotEmpty && barangay.isNotEmpty) {
+            _locationText = '$street, $barangay';
+          } else if (barangay.isNotEmpty) {
+            _locationText = barangay;
+          } else {
+            _locationText = 'Tagum City';
+          }
         } else {
           _locationText = 'Current Location';
         }
@@ -147,5 +182,11 @@ class MapViewModel extends ChangeNotifier {
     mapController.move(const LatLng(7.4479, 125.8072), 14.0);
     _locationText = 'Tagum City, Davao del Norte';
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    mapController.dispose();
+    super.dispose();
   }
 }

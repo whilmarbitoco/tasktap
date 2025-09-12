@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../viewmodels/map_viewmodel.dart';
+import 'task_detail_page.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -67,17 +68,19 @@ class _MapPageState extends State<MapPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Tasks Near You',
+                  'Your Location',
                   style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey,
                   ),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   _viewModel.locationText,
                   style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
@@ -139,14 +142,26 @@ class _MapPageState extends State<MapPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Tasks in this area',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            children: [
+              const Text(
+                'Tasks Near You',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${_viewModel.nearbyTasks.length} available',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           SizedBox(
             height: 80,
             child: ListView.builder(
@@ -155,9 +170,8 @@ class _MapPageState extends State<MapPage> {
               itemBuilder: (context, index) {
                 final task = _viewModel.nearbyTasks[index];
                 return _buildTaskChip(
-                  task.title,
-                  '₱${task.price.toInt()}',
-                  task.category == 'Delivery' ? Icons.shopping_cart : Icons.cleaning_services,
+                  task,
+                  _getCategoryIcon(task.category),
                 );
               },
             ),
@@ -167,44 +181,71 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
-  Widget _buildTaskChip(String title, String price, IconData icon) {
-    return Container(
-      width: 140,
-      margin: const EdgeInsets.only(right: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 16, color: const Color(0xFFF59E0B)),
-              const Spacer(),
-              Text(
-                price,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFF59E0B),
+  Widget _buildTaskChip(task, IconData icon) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TaskDetailPage(task: task),
+          ),
+        );
+      },
+      child: Container(
+        width: 140,
+        margin: const EdgeInsets.only(right: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[200]!),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 16, color: const Color(0xFFF59E0B)),
+                const Spacer(),
+                Text(
+                  '₱${task.price.toInt()}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFF59E0B),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+              ],
             ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              task.title,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case 'Home & Errands':
+        return Icons.home;
+      case 'Repairs & Maintenance':
+        return Icons.build;
+      case 'Learning & Tutoring':
+        return Icons.school;
+      case 'Care & Personal Assistance':
+        return Icons.favorite;
+      case 'Events & Miscellaneous':
+        return Icons.celebration;
+      default:
+        return Icons.work;
+    }
   }
 }
