@@ -7,6 +7,8 @@ import '../models/task.dart';
 import '../repositories/task_repository.dart';
 
 class MapViewModel extends ChangeNotifier {
+  bool _disposed = false;
+  bool get mounted => !_disposed;
   final MapController mapController = MapController();
   final TaskRepository _taskRepository;
   LatLng? _currentLocation;
@@ -128,14 +130,18 @@ class MapViewModel extends ChangeNotifier {
   }
 
   Future<void> getCurrentLocation() async {
-    _isLoading = true;
-    notifyListeners();
+    if (mounted) {
+      _isLoading = true;
+      notifyListeners();
+    }
 
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        _isLoading = false;
-        notifyListeners();
+        if (mounted) {
+          _isLoading = false;
+          notifyListeners();
+        }
         return;
       }
 
@@ -143,13 +149,17 @@ class MapViewModel extends ChangeNotifier {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          _isLoading = false;
-          notifyListeners();
+          if (mounted) {
+            _isLoading = false;
+            notifyListeners();
+          }
           return;
         }
       }
 
       Position position = await Geolocator.getCurrentPosition();
+      if (!mounted) return;
+      
       _currentLocation = LatLng(position.latitude, position.longitude);
 
       // Get street address with barangay
@@ -158,7 +168,7 @@ class MapViewModel extends ChangeNotifier {
           position.latitude,
           position.longitude,
         );
-        if (placemarks.isNotEmpty) {
+        if (placemarks.isNotEmpty && mounted) {
           final place = placemarks.first;
           String street = place.street ?? '';
           String barangay = place.subLocality ?? place.locality ?? '';
@@ -177,14 +187,18 @@ class MapViewModel extends ChangeNotifier {
         _locationText = 'Current Location';
       }
 
-      mapController.move(_currentLocation!, 15.0);
-      _filterNearbyTasks();
+      if (mounted) {
+        mapController.move(_currentLocation!, 15.0);
+        _filterNearbyTasks();
+      }
     } catch (e) {
       // Handle error silently
     }
 
-    _isLoading = false;
-    notifyListeners();
+    if (mounted) {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   IconData _getCategoryIcon(String category) {
@@ -212,6 +226,7 @@ class MapViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     mapController.dispose();
     super.dispose();
   }

@@ -4,56 +4,46 @@ import '../widgets/auth_header.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/google_sign_in_button.dart';
-import '../services/auth_service.dart';
 import '../repositories/user_repository.dart';
 import 'signup_page.dart';
+import '../viewmodels/login_viewmodel.dart';
 
-class LoginPage extends StatefulWidget {
+class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
-}
-
-class _LoginPageState extends State<LoginPage> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  late final AuthService _authService;
-  bool _obscurePassword = true;
-  bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _authService = AuthService(context.read<UserRepository>());
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildHeader(),
-                const SizedBox(height: 48),
-                _buildEmailField(),
-                const SizedBox(height: 16),
-                _buildPasswordField(),
-                const SizedBox(height: 24),
-                _buildSignInButton(),
-                const SizedBox(height: 16),
-                _buildGoogleSignInButton(),
-                const SizedBox(height: 24),
-                _buildSignUpLink(),
-              ],
+    return ChangeNotifierProvider(
+      create: (_) => LoginViewModel(context.read<UserRepository>()),
+      child: Consumer<LoginViewModel>(
+        builder: (context, vm, _) {
+          return Scaffold(
+            backgroundColor: Colors.grey[50],
+            body: SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildHeader(),
+                      const SizedBox(height: 48),
+                      _buildEmailField(vm),
+                      const SizedBox(height: 16),
+                      _buildPasswordField(vm),
+                      const SizedBox(height: 24),
+                      _buildSignInButton(context, vm),
+                      const SizedBox(height: 16),
+                      _buildGoogleSignInButton(context, vm),
+                      const SizedBox(height: 24),
+                      _buildSignUpLink(context),
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -66,42 +56,44 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildEmailField() {
+  Widget _buildEmailField(LoginViewModel vm) {
     return CustomTextField(
-      controller: _emailController,
+      controller: vm.emailController,
       labelText: 'Email',
       prefixIcon: Icons.email_outlined,
       keyboardType: TextInputType.emailAddress,
     );
   }
 
-  Widget _buildPasswordField() {
+  Widget _buildPasswordField(LoginViewModel vm) {
     return CustomTextField(
-      controller: _passwordController,
+      controller: vm.passwordController,
       labelText: 'Password',
       prefixIcon: Icons.lock_outlined,
-      obscureText: _obscurePassword,
+      obscureText: vm.obscurePassword,
       suffixIcon: IconButton(
-        icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
-        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+        icon: Icon(
+          vm.obscurePassword ? Icons.visibility : Icons.visibility_off,
+        ),
+        onPressed: vm.togglePasswordVisibility,
       ),
     );
   }
 
-  Widget _buildSignInButton() {
+  Widget _buildSignInButton(BuildContext context, LoginViewModel vm) {
     return CustomButton(
-      text: _isLoading ? 'Signing In...' : 'Sign In',
-      onPressed: _isLoading ? () {} : _handleEmailSignIn,
+      text: vm.isLoading ? 'Signing In...' : 'Sign In',
+      onPressed: vm.isLoading ? null : () => vm.signInWithEmail(context),
     );
   }
 
-  Widget _buildGoogleSignInButton() {
+  Widget _buildGoogleSignInButton(BuildContext context, LoginViewModel vm) {
     return GoogleSignInButton(
-      onPressed: _isLoading ? () {} : _handleGoogleSignIn,
+      onPressed: vm.isLoading ? null : () => vm.signInWithGoogle(context),
     );
   }
 
-  Widget _buildSignUpLink() {
+  Widget _buildSignUpLink(BuildContext context) {
     return TextButton(
       onPressed: () => Navigator.push(
         context,
@@ -123,47 +115,5 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
-  }
-
-  Future<void> _handleEmailSignIn() async {
-    setState(() => _isLoading = true);
-    try {
-      final user = await _authService.signInWithEmail(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
-      if (user != null) {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _handleGoogleSignIn() async {
-    setState(() => _isLoading = true);
-    try {
-      final user = await _authService.signInWithGoogle();
-      if (user != null) {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
   }
 }
