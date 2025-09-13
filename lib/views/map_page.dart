@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
 import '../viewmodels/map_viewmodel.dart';
+import '../repositories/task_repository.dart';
 import 'task_detail_page.dart';
 
 class MapPage extends StatefulWidget {
@@ -17,7 +19,7 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
-    _viewModel = MapViewModel();
+    _viewModel = MapViewModel(context.read<TaskRepository>());
     _viewModel.addListener(_onViewModelChanged);
   }
 

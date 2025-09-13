@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import '../models/message.dart';
 
 class ChatViewModel extends ChangeNotifier {
-  final String userName;
-  final String taskTitle;
+  final String taskId;
   final List<Message> _messages = [];
+  String userName = 'Task Owner';
+  String taskTitle = 'Task Discussion';
 
-  ChatViewModel({required this.userName, required this.taskTitle}) {
+  ChatViewModel({required this.taskId}) {
     _initializeMessages();
   }
 
@@ -16,7 +17,7 @@ class ChatViewModel extends ChangeNotifier {
     _messages.addAll([
       Message(
         id: '1',
-        text: 'Hi! Is the ${taskTitle.toLowerCase()} task still available?',
+        text: 'Hi! Is the task still available?',
         isMe: false,
         time: DateTime.now().subtract(const Duration(minutes: 5)),
       ),

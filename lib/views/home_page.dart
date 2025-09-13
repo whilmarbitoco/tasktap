@@ -160,7 +160,9 @@ class _HomePageState extends State<HomePage> {
               ),
               child: TextField(
                 controller: _searchController,
-                onChanged: (value) {},
+                onChanged: (value) {
+                  context.read<HomeViewModel>().searchTasks(value);
+                },
                 decoration: InputDecoration(
                   hintText: 'Search tasks...',
                   hintStyle: TextStyle(color: Colors.grey[500]),

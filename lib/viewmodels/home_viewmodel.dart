@@ -14,7 +14,9 @@ class HomeViewModel extends ChangeNotifier {
   double? _userLongitude;
   bool _isLoadingLocation = false;
   List<Task> _tasks = [];
+  List<Task> _filteredTasks = [];
   bool _isLoadingTasks = false;
+  String _searchQuery = '';
 
   HomeViewModel(this._taskRepository, this._userRepository) {
     _migrationService = MigrationService(_userRepository, _taskRepository);
@@ -26,7 +28,8 @@ class HomeViewModel extends ChangeNotifier {
   bool get isLoadingLocation => _isLoadingLocation;
   bool get isLoadingTasks => _isLoadingTasks;
 
-  List<Task> get tasks => _tasks;
+  List<Task> get tasks => _searchQuery.isEmpty ? _tasks : _filteredTasks;
+  String get searchQuery => _searchQuery;
 
   Future<void> _loadTasks() async {
     _isLoadingTasks = true;
@@ -55,6 +58,21 @@ class HomeViewModel extends ChangeNotifier {
 
   Future<void> refreshTasks() async {
     await _loadTasks();
+  }
+
+  void searchTasks(String query) {
+    _searchQuery = query.toLowerCase();
+    if (_searchQuery.isEmpty) {
+      _filteredTasks = [];
+    } else {
+      _filteredTasks = _tasks.where((task) {
+        return task.title.toLowerCase().contains(_searchQuery) ||
+               task.description.toLowerCase().contains(_searchQuery) ||
+               task.category.toLowerCase().contains(_searchQuery) ||
+               task.location.toLowerCase().contains(_searchQuery);
+      }).toList();
+    }
+    notifyListeners();
   }
 
   List<Task> get suggestedTasks {

@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import '../viewmodels/chat_viewmodel.dart';
 
 class ChatPage extends StatefulWidget {
-  final String userName;
-  final String taskTitle;
+  final String taskId;
 
   const ChatPage({
     super.key,
-    required this.userName,
-    required this.taskTitle,
+    required this.taskId,
   });
 
   @override
@@ -23,8 +21,7 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     super.initState();
     _viewModel = ChatViewModel(
-      userName: widget.userName,
-      taskTitle: widget.taskTitle,
+      taskId: widget.taskId,
     );
     _viewModel.addListener(_onViewModelChanged);
   }
@@ -58,7 +55,7 @@ class _ChatPageState extends State<ChatPage> {
               radius: 20,
               backgroundColor: const Color(0xFFF59E0B),
               child: Text(
-                widget.userName[0].toUpperCase(),
+                _viewModel.userName.isNotEmpty ? _viewModel.userName[0].toUpperCase() : 'U',
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -71,7 +68,7 @@ class _ChatPageState extends State<ChatPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.userName,
+                    _viewModel.userName,
                     style: const TextStyle(
                       color: Colors.black,
                       fontSize: 16,
@@ -79,7 +76,7 @@ class _ChatPageState extends State<ChatPage> {
                     ),
                   ),
                   Text(
-                    widget.taskTitle,
+                    _viewModel.taskTitle,
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 12,
@@ -138,7 +135,7 @@ class _ChatPageState extends State<ChatPage> {
                   radius: 16,
                   backgroundColor: const Color(0xFFF59E0B),
                   child: Text(
-                    widget.userName[0].toUpperCase(),
+                    _viewModel.userName.isNotEmpty ? _viewModel.userName[0].toUpperCase() : 'U',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,

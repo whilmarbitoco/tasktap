@@ -76,20 +76,19 @@ class MessagesPage extends StatelessWidget {
       itemCount: messages.length,
       itemBuilder: (context, index) {
         final message = messages[index];
-        return _buildMessageItem(context, message);
+        return _buildMessageItem(context, message, index);
       },
     );
   }
 
-  Widget _buildMessageItem(BuildContext context, Map<String, dynamic> message) {
+  Widget _buildMessageItem(BuildContext context, Map<String, dynamic> message, int index) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => ChatPage(
-              userName: message['name'],
-              taskTitle: message['taskTitle'],
+              taskId: 'task_${index + 1}',
             ),
           ),
         );
