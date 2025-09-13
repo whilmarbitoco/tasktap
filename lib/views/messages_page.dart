@@ -3,8 +3,22 @@ import 'package:provider/provider.dart';
 import '../viewmodels/messages_viewmodel.dart';
 import 'chat_page.dart';
 
-class MessagesPage extends StatelessWidget {
+class MessagesPage extends StatefulWidget {
   const MessagesPage({super.key});
+
+  @override
+  State<MessagesPage> createState() => _MessagesPageState();
+}
+
+class _MessagesPageState extends State<MessagesPage> {
+  final _searchController = TextEditingController();
+  bool _isSearching = false;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,22 +38,87 @@ class MessagesPage extends StatelessWidget {
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(20),
-      child: Row(
+      child: Column(
         children: [
-          const Text(
-            'Messages',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          Row(
+            children: [
+              const Text(
+                'Messages',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: () {
+                  context.read<MessagesViewModel>().refreshConversations();
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey[200]!),
+                  ),
+                  child: const Icon(
+                    Icons.refresh,
+                    size: 20,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _isSearching = !_isSearching;
+                    if (!_isSearching) {
+                      _searchController.clear();
+                      context.read<MessagesViewModel>().searchConversations('');
+                    }
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _isSearching
+                        ? const Color(0xFFF59E0B)
+                        : Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey[200]!),
+                  ),
+                  child: Icon(
+                    Icons.search,
+                    size: 20,
+                    color: _isSearching ? Colors.white : Colors.black,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey[200]!),
+          if (_isSearching) ...[
+            const SizedBox(height: 16),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[200]!),
+              ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (value) {
+                  context.read<MessagesViewModel>().searchConversations(value);
+                },
+                decoration: const InputDecoration(
+                  hintText: 'Search conversations...',
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  prefixIcon: Icon(Icons.search, color: Colors.grey),
+                ),
+              ),
             ),
-            child: const Icon(Icons.search, size: 20),
-          ),
+          ],
         ],
       ),
     );
@@ -76,15 +155,17 @@ class MessagesPage extends StatelessWidget {
     );
   }
 
-  Widget _buildMessageItem(BuildContext context, conversation, MessagesViewModel viewModel) {
+  Widget _buildMessageItem(
+    BuildContext context,
+    conversation,
+    MessagesViewModel viewModel,
+  ) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ChatPage(
-              taskId: conversation.taskId,
-            ),
+            builder: (context) => ChatPage(taskId: conversation.taskId),
           ),
         );
       },

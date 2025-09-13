@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/chat_viewmodel.dart';
 import '../repositories/message_repository.dart';
+import '../repositories/user_repository.dart';
+import '../repositories/task_repository.dart';
+import '../services/notification_service.dart';
 
 class ChatPage extends StatefulWidget {
   final String taskId;
@@ -25,6 +28,9 @@ class _ChatPageState extends State<ChatPage> {
     _viewModel = ChatViewModel(
       taskId: widget.taskId,
       messageRepository: context.read<MessageRepository>(),
+      userRepository: context.read<UserRepository>(),
+      taskRepository: context.read<TaskRepository>(),
+      notificationService: context.read<NotificationService>(),
     );
     _viewModel.addListener(_onViewModelChanged);
   }
@@ -122,7 +128,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildMessageBubble(message) {
-    final isMe = message.isMe;
+    final isMe = _viewModel.currentUserId != null && message.isMe(_viewModel.currentUserId!);
     final time = message.time;
     
     return Container(

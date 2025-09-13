@@ -10,6 +10,8 @@ import 'widgets/error_screen.dart';
 import 'repositories/task_repository.dart';
 import 'repositories/user_repository.dart';
 import 'repositories/message_repository.dart';
+import 'repositories/notification_repository.dart';
+import 'services/notification_service.dart';
 import 'viewmodels/home_viewmodel.dart';
 import 'viewmodels/profile_viewmodel.dart';
 import 'viewmodels/messages_viewmodel.dart';
@@ -46,7 +48,16 @@ class TaskTapApp extends StatelessWidget {
           create: (_) => FirebaseTaskRepository(),
         ),
         Provider<MessageRepository>(
-          create: (_) => FirebaseMessageRepository(),
+          create: (context) => FirebaseMessageRepository(
+            context.read<TaskRepository>(),
+            context.read<UserRepository>(),
+          ),
+        ),
+        Provider<NotificationRepository>(
+          create: (_) => FirebaseNotificationRepository(),
+        ),
+        Provider<NotificationService>(
+          create: (context) => NotificationService(context.read<NotificationRepository>()),
         ),
         ChangeNotifierProvider<HomeViewModel>(
           create: (context) => HomeViewModel(
