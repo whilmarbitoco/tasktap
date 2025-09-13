@@ -1,42 +1,41 @@
 import 'package:flutter/material.dart';
 import '../models/message.dart';
+import '../repositories/message_repository.dart';
 
 class ChatViewModel extends ChangeNotifier {
   final String taskId;
+  final MessageRepository _messageRepository;
   final List<Message> _messages = [];
   String userName = 'Task Owner';
   String taskTitle = 'Task Discussion';
+  bool _isLoading = false;
 
-  ChatViewModel({required this.taskId}) {
-    _initializeMessages();
+  ChatViewModel({required this.taskId, required MessageRepository messageRepository}) 
+      : _messageRepository = messageRepository {
+    _loadMessages();
   }
+
+  bool get isLoading => _isLoading;
 
   List<Message> get messages => _messages;
 
-  void _initializeMessages() {
-    _messages.addAll([
-      Message(
-        id: '1',
-        text: 'Hi! Is the task still available?',
-        isMe: false,
-        time: DateTime.now().subtract(const Duration(minutes: 5)),
-      ),
-      Message(
-        id: '2',
-        text: 'Yes, it\'s still available! Are you interested?',
-        isMe: true,
-        time: DateTime.now().subtract(const Duration(minutes: 3)),
-      ),
-      Message(
-        id: '3',
-        text: 'Great! When would you like me to start?',
-        isMe: false,
-        time: DateTime.now().subtract(const Duration(minutes: 2)),
-      ),
-    ]);
+  Future<void> _loadMessages() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final messages = await _messageRepository.getTaskMessages(taskId);
+      _messages.clear();
+      _messages.addAll(messages);
+    } catch (e) {
+      // Handle error
+    }
+
+    _isLoading = false;
+    notifyListeners();
   }
 
-  void sendMessage(String text) {
+  Future<void> sendMessage(String text) async {
     if (text.trim().isEmpty) return;
     
     final message = Message(
@@ -48,6 +47,12 @@ class ChatViewModel extends ChangeNotifier {
     
     _messages.add(message);
     notifyListeners();
+
+    try {
+      await _messageRepository.sendMessage(message);
+    } catch (e) {
+      // Handle error
+    }
   }
 
   String formatTime(DateTime time) {

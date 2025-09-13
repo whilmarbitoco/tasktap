@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../viewmodels/messages_viewmodel.dart';
 import 'chat_page.dart';
 
 class MessagesPage extends StatelessWidget {
@@ -44,51 +46,44 @@ class MessagesPage extends StatelessWidget {
   }
 
   Widget _buildMessagesList() {
-    final messages = [
-      {
-        'name': 'Maria Santos',
-        'message': 'Hi! Is the grocery task still available?',
-        'time': '2m ago',
-        'avatar': 'M',
-        'unread': true,
-        'taskTitle': 'Grocery Shopping',
-      },
-      {
-        'name': 'John Dela Cruz',
-        'message': 'Thank you for completing the cleaning task!',
-        'time': '1h ago',
-        'avatar': 'J',
-        'unread': false,
-        'taskTitle': 'House Cleaning',
-      },
-      {
-        'name': 'Ana Reyes',
-        'message': 'When can we schedule the tutoring session?',
-        'time': '3h ago',
-        'avatar': 'A',
-        'unread': true,
-        'taskTitle': 'Math Tutoring',
-      },
-    ];
+    return Consumer<MessagesViewModel>(
+      builder: (context, viewModel, child) {
+        if (viewModel.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      itemCount: messages.length,
-      itemBuilder: (context, index) {
-        final message = messages[index];
-        return _buildMessageItem(context, message, index);
+        if (viewModel.conversations.isEmpty) {
+          return const Center(
+            child: Text(
+              'No conversations yet',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: () => viewModel.refreshConversations(),
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: viewModel.conversations.length,
+            itemBuilder: (context, index) {
+              final conversation = viewModel.conversations[index];
+              return _buildMessageItem(context, conversation, viewModel);
+            },
+          ),
+        );
       },
     );
   }
 
-  Widget _buildMessageItem(BuildContext context, Map<String, dynamic> message, int index) {
+  Widget _buildMessageItem(BuildContext context, conversation, MessagesViewModel viewModel) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => ChatPage(
-              taskId: 'task_${index + 1}',
+              taskId: conversation.taskId,
             ),
           ),
         );
@@ -114,7 +109,7 @@ class MessagesPage extends StatelessWidget {
               ),
               child: Center(
                 child: Text(
-                  message['avatar'],
+                  conversation.otherUserName[0].toUpperCase(),
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -131,7 +126,7 @@ class MessagesPage extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        message['name'],
+                        conversation.otherUserName,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -139,23 +134,23 @@ class MessagesPage extends StatelessWidget {
                       ),
                       const Spacer(),
                       Text(
-                        message['time'],
+                        viewModel.formatTime(conversation.lastMessageTime),
                         style: TextStyle(color: Colors.grey[600], fontSize: 12),
                       ),
                     ],
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    message['taskTitle'],
-                    style: TextStyle(
-                      color: const Color(0xFFF59E0B),
+                    conversation.taskTitle,
+                    style: const TextStyle(
+                      color: Color(0xFFF59E0B),
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    message['message'],
+                    conversation.lastMessage,
                     style: TextStyle(color: Colors.grey[700], fontSize: 14),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -163,7 +158,7 @@ class MessagesPage extends StatelessWidget {
                 ],
               ),
             ),
-            if (message['unread'])
+            if (conversation.hasUnreadMessages)
               Container(
                 width: 8,
                 height: 8,

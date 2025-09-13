@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../models/task.dart';
+import '../models/user.dart';
+import '../repositories/user_repository.dart';
 import 'chat_page.dart';
 
 class TaskDetailPage extends StatefulWidget {
@@ -21,11 +24,14 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   double? _distance;
   List<LatLng> _routePoints = [];
   bool _isLoadingRoute = false;
+  User? _taskOwner;
+  bool _isLoadingUser = false;
 
   @override
   void initState() {
     super.initState();
     _getUserLocation();
+    _loadTaskOwner();
   }
 
   Future<void> _getUserLocation() async {
@@ -88,6 +94,22 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
 
     setState(() {
       _isLoadingRoute = false;
+    });
+  }
+
+  Future<void> _loadTaskOwner() async {
+    setState(() {
+      _isLoadingUser = true;
+    });
+
+    try {
+      _taskOwner = await context.read<UserRepository>().getUser(widget.task.postedByUserId);
+    } catch (e) {
+      // Handle error
+    }
+
+    setState(() {
+      _isLoadingUser = false;
     });
   }
 
@@ -236,7 +258,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.task.postedByUserId,
+                      _taskOwner?.name ?? widget.task.postedByUserId,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,

@@ -196,7 +196,9 @@ class _HomePageState extends State<HomePage> {
             ),
             child: IconButton(
               icon: const Icon(Icons.tune, color: Colors.white),
-              onPressed: () {},
+              onPressed: () {
+                _showFilterDialog(context);
+              },
             ),
           ),
         ],
@@ -402,6 +404,70 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showFilterDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Filter Tasks',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            const Text('Categories:', style: TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              children: HomeViewModel.categories.map((category) {
+                return FilterChip(
+                  label: Text(category),
+                  selected: false,
+                  onSelected: (selected) {
+                    if (selected) {
+                      context.read<HomeViewModel>().searchTasks(category);
+                      Navigator.pop(context);
+                    }
+                  },
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      context.read<HomeViewModel>().searchTasks('');
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Clear Filters'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF59E0B),
+                    ),
+                    child: const Text('Done', style: TextStyle(color: Colors.white)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

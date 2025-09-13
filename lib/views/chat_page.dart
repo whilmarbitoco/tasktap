@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../viewmodels/chat_viewmodel.dart';
+import '../repositories/message_repository.dart';
 
 class ChatPage extends StatefulWidget {
   final String taskId;
@@ -22,6 +24,7 @@ class _ChatPageState extends State<ChatPage> {
     super.initState();
     _viewModel = ChatViewModel(
       taskId: widget.taskId,
+      messageRepository: context.read<MessageRepository>(),
     );
     _viewModel.addListener(_onViewModelChanged);
   }

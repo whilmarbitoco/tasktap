@@ -9,8 +9,10 @@ import 'widgets/main_layout.dart';
 import 'widgets/error_screen.dart';
 import 'repositories/task_repository.dart';
 import 'repositories/user_repository.dart';
+import 'repositories/message_repository.dart';
 import 'viewmodels/home_viewmodel.dart';
 import 'viewmodels/profile_viewmodel.dart';
+import 'viewmodels/messages_viewmodel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,6 +45,9 @@ class TaskTapApp extends StatelessWidget {
         Provider<TaskRepository>(
           create: (_) => FirebaseTaskRepository(),
         ),
+        Provider<MessageRepository>(
+          create: (_) => FirebaseMessageRepository(),
+        ),
         ChangeNotifierProvider<HomeViewModel>(
           create: (context) => HomeViewModel(
             context.read<TaskRepository>(),
@@ -51,6 +56,9 @@ class TaskTapApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<ProfileViewModel>(
           create: (context) => ProfileViewModel(context.read<UserRepository>()),
+        ),
+        ChangeNotifierProvider<MessagesViewModel>(
+          create: (context) => MessagesViewModel(context.read<MessageRepository>()),
         ),
       ],
       child: MaterialApp(
