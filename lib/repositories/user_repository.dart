@@ -12,11 +12,14 @@ abstract class UserRepository {
 }
 
 class FirebaseUserRepository implements UserRepository {
-  final DatabaseReference _usersRef = FirebaseDatabase.instance.ref().child('users');
+  final DatabaseReference _usersRef = FirebaseDatabase.instance.ref().child(
+    'users',
+  );
 
   @override
   Future<void> createUser(User user) async {
     await _usersRef.child(user.id).set(user.toJson());
+    print("User created with ID: ${user.id}");
   }
 
   @override
@@ -42,7 +45,9 @@ class FirebaseUserRepository implements UserRepository {
   Stream<User?> listenToUser(String userId) {
     return _usersRef.child(userId).onValue.map((event) {
       if (event.snapshot.exists) {
-        return User.fromJson(Map<String, dynamic>.from(event.snapshot.value as Map));
+        return User.fromJson(
+          Map<String, dynamic>.from(event.snapshot.value as Map),
+        );
       }
       return null;
     });
@@ -52,7 +57,8 @@ class FirebaseUserRepository implements UserRepository {
   Future<List<User>> getAllUsers() async {
     final snapshot = await _usersRef.get();
     if (snapshot.exists) {
-      final Map<dynamic, dynamic> usersMap = snapshot.value as Map<dynamic, dynamic>;
+      final Map<dynamic, dynamic> usersMap =
+          snapshot.value as Map<dynamic, dynamic>;
       return usersMap.values
           .map((userData) => User.fromJson(Map<String, dynamic>.from(userData)))
           .toList();
@@ -64,9 +70,12 @@ class FirebaseUserRepository implements UserRepository {
   Stream<List<User>> listenToAllUsers() {
     return _usersRef.onValue.map((event) {
       if (event.snapshot.exists) {
-        final Map<dynamic, dynamic> usersMap = event.snapshot.value as Map<dynamic, dynamic>;
+        final Map<dynamic, dynamic> usersMap =
+            event.snapshot.value as Map<dynamic, dynamic>;
         return usersMap.values
-            .map((userData) => User.fromJson(Map<String, dynamic>.from(userData)))
+            .map(
+              (userData) => User.fromJson(Map<String, dynamic>.from(userData)),
+            )
             .toList();
       }
       return <User>[];

@@ -19,7 +19,7 @@ class SignUpViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   SignUpViewModel(UserRepository userRepository)
-      : _authService = AuthService(userRepository);
+    : _authService = AuthService(userRepository);
 
   void togglePasswordVisibility() {
     _obscurePassword = !_obscurePassword;
@@ -57,7 +57,9 @@ class SignUpViewModel extends ChangeNotifier {
   Future<void> signUpWithGoogle(BuildContext context) async {
     _setLoading(true);
     try {
-      final user = await _authService.signUpWithGoogle(nameController.text.trim());
+      final user = await _authService.signUpWithGoogle(
+        nameController.text.trim(),
+      );
       if (user != null) {
         Navigator.pushReplacementNamed(context, '/home');
       }
@@ -74,9 +76,9 @@ class SignUpViewModel extends ChangeNotifier {
   }
 
   void _showError(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override

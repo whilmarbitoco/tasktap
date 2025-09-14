@@ -20,115 +20,123 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   final _messageController = TextEditingController();
-  late ChatViewModel _viewModel;
-
-  @override
-  void initState() {
-    super.initState();
-    _viewModel = ChatViewModel(
-      taskId: widget.taskId,
-      messageRepository: context.read<MessageRepository>(),
-      userRepository: context.read<UserRepository>(),
-      taskRepository: context.read<TaskRepository>(),
-      notificationService: context.read<NotificationService>(),
-    );
-    _viewModel.addListener(_onViewModelChanged);
-  }
-
-  void _onViewModelChanged() {
-    if (mounted) setState(() {});
-  }
 
   @override
   void dispose() {
-    _viewModel.removeListener(_onViewModelChanged);
-    _viewModel.dispose();
     _messageController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Row(
-          children: [
-            CircleAvatar(
-              radius: 20,
-              backgroundColor: const Color(0xFFF59E0B),
-              child: Text(
-                _viewModel.userName.isNotEmpty ? _viewModel.userName[0].toUpperCase() : 'U',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
+    return ChangeNotifierProvider(
+      create: (_) => ChatViewModel(
+        taskId: widget.taskId,
+        messageRepository: context.read<MessageRepository>(),
+        userRepository: context.read<UserRepository>(),
+        taskRepository: context.read<TaskRepository>(),
+        notificationService: context.read<NotificationService>(),
+      ),
+      child: Consumer<ChatViewModel>(
+        builder: (context, viewModel, _) {
+          if (viewModel.isLoading) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+          
+          return Scaffold(
+            backgroundColor: Colors.grey[50],
+            appBar: AppBar(
+              backgroundColor: Colors.white,
+              elevation: 1,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.black),
+                onPressed: () => Navigator.pop(context),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              title: Row(
                 children: [
-                  Text(
-                    _viewModel.userName,
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: const Color(0xFFF59E0B),
+                    child: Text(
+                      viewModel.userName.isNotEmpty ? viewModel.userName[0].toUpperCase() : 'U',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                  Text(
-                    _viewModel.taskTitle,
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          viewModel.userName,
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          viewModel.taskTitle,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.phone, color: Color(0xFFF59E0B)),
+                  onPressed: () {},
+                ),
+                IconButton(
+                  icon: const Icon(Icons.more_vert, color: Colors.black),
+                  onPressed: () {},
+                ),
+              ],
             ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.phone, color: Color(0xFFF59E0B)),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black),
-            onPressed: () {},
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(child: _buildMessagesList()),
-          _buildMessageInput(),
-        ],
+            body: Column(
+              children: [
+                Expanded(child: _buildMessagesList(viewModel)),
+                _buildMessageInput(viewModel),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildMessagesList() {
+  Widget _buildMessagesList(ChatViewModel viewModel) {
+    if (viewModel.messages.isEmpty) {
+      return const Center(
+        child: Text(
+          'No messages yet. Start the conversation!',
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
+    }
+    
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: _viewModel.messages.length,
+      itemCount: viewModel.messages.length,
       itemBuilder: (context, index) {
-        final message = _viewModel.messages[index];
-        return _buildMessageBubble(message);
+        final message = viewModel.messages[index];
+        return _buildMessageBubble(message, viewModel);
       },
     );
   }
 
-  Widget _buildMessageBubble(message) {
-    final isMe = _viewModel.currentUserId != null && message.isMe(_viewModel.currentUserId!);
+  Widget _buildMessageBubble(message, ChatViewModel viewModel) {
+    final isMe = viewModel.currentUserId != null && message.senderId == viewModel.currentUserId;
     final time = message.time;
     
     return Container(
@@ -144,7 +152,7 @@ class _ChatPageState extends State<ChatPage> {
                   radius: 16,
                   backgroundColor: const Color(0xFFF59E0B),
                   child: Text(
-                    _viewModel.userName.isNotEmpty ? _viewModel.userName[0].toUpperCase() : 'U',
+                    viewModel.userName.isNotEmpty ? viewModel.userName[0].toUpperCase() : 'U',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
@@ -192,7 +200,7 @@ class _ChatPageState extends State<ChatPage> {
               right: isMe ? 40 : 0,
             ),
             child: Text(
-              _viewModel.formatTime(time),
+              viewModel.formatTime(time),
               style: TextStyle(
                 color: Colors.grey[500],
                 fontSize: 11,
@@ -204,7 +212,7 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  Widget _buildMessageInput() {
+  Widget _buildMessageInput(ChatViewModel viewModel) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -236,7 +244,7 @@ class _ChatPageState extends State<ChatPage> {
             ),
             const SizedBox(width: 12),
             GestureDetector(
-              onTap: _sendMessage,
+              onTap: () => _sendMessage(viewModel),
               child: Container(
                 width: 48,
                 height: 48,
@@ -257,8 +265,8 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  void _sendMessage() {
-    _viewModel.sendMessage(_messageController.text);
+  void _sendMessage(ChatViewModel viewModel) {
+    viewModel.sendMessage(_messageController.text);
     _messageController.clear();
   }
 

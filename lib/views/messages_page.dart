@@ -15,6 +15,16 @@ class _MessagesPageState extends State<MessagesPage> {
   bool _isSearching = false;
 
   @override
+  void initState() {
+    super.initState();
+
+    Future.microtask(() {
+      if (!mounted) return;
+      context.read<MessagesViewModel>().refreshConversations();
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -47,24 +57,6 @@ class _MessagesPageState extends State<MessagesPage> {
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const Spacer(),
-              GestureDetector(
-                onTap: () {
-                  context.read<MessagesViewModel>().refreshConversations();
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey[200]!),
-                  ),
-                  child: const Icon(
-                    Icons.refresh,
-                    size: 20,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
               const SizedBox(width: 8),
               GestureDetector(
                 onTap: () {

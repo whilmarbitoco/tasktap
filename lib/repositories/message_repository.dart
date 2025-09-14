@@ -7,6 +7,7 @@ import '../repositories/user_repository.dart';
 abstract class MessageRepository {
   Future<List<Conversation>> getUserConversations(String userId);
   Future<List<Message>> getTaskMessages(String taskId);
+  Future<List<Message>> getChatMessages(String userId1, String userId2);
   Future<void> sendMessage(Message message);
 }
 
@@ -26,11 +27,10 @@ class FirebaseMessageRepository implements MessageRepository {
   Future<List<Conversation>> getUserConversations(String userId) async {
     try {
       print('Querying conversations for userId: $userId');
-      final snapshot = await _conversationsRef
-          .orderByChild('userId')
-          .equalTo(userId)
-          .get();
-
+      
+      // Get all conversations and filter by userId prefix
+      final snapshot = await _conversationsRef.get();
+      
       print('Snapshot exists: ${snapshot.exists}');
       if (!snapshot.exists || snapshot.value == null) {
         print('No conversations found');
@@ -38,19 +38,25 @@ class FirebaseMessageRepository implements MessageRepository {
       }
 
       final data = Map<String, dynamic>.from(snapshot.value as Map);
-      print('Found ${data.length} conversation records');
+      print('Found ${data.length} total conversation records');
       final conversations = <Conversation>[];
 
-      for (final convData in data.values) {
-        final conversation = Conversation.fromJson(
-          Map<String, dynamic>.from(convData),
-        );
-        conversations.add(conversation);
-        print(
-          'Added conversation: ${conversation.otherUserName} - ${conversation.taskTitle}',
-        );
+      // Filter conversations that belong to the current user
+      for (final entry in data.entries) {
+        final conversationId = entry.key;
+        final convData = Map<String, dynamic>.from(entry.value);
+        
+        // Check if this conversation belongs to the current user
+        if (conversationId.startsWith('${userId}_')) {
+          final conversation = Conversation.fromJson(convData);
+          conversations.add(conversation);
+          print(
+            'Added conversation: ${conversation.otherUserName} - ${conversation.taskTitle}',
+          );
+        }
       }
 
+      print('Filtered to ${conversations.length} conversations for user');
       conversations.sort(
         (a, b) => b.lastMessageTime.compareTo(a.lastMessageTime),
       );
@@ -64,19 +70,34 @@ class FirebaseMessageRepository implements MessageRepository {
   @override
   Future<List<Message>> getTaskMessages(String taskId) async {
     try {
-      final snapshot = await _messagesRef
-          .orderByChild('taskId')
-          .equalTo(taskId)
-          .get();
-
+      // Get all conversations and find the one for this task
+      final conversationsSnapshot = await _conversationsRef.get();
+      if (!conversationsSnapshot.exists) return [];
+      
+      final conversationsData = Map<String, dynamic>.from(conversationsSnapshot.value as Map);
+      String? chatId;
+      
+      // Find the chat ID for this task
+      for (final entry in conversationsData.entries) {
+        final convData = Map<String, dynamic>.from(entry.value);
+        if (convData['taskId'] == taskId) {
+          // Extract user IDs from conversation to build chat ID
+          final userId = convData['userId'];
+          final otherUserId = convData['otherUserId'];
+          chatId = _generateChatId(userId, otherUserId);
+          break;
+        }
+      }
+      
+      if (chatId == null) return [];
+      
+      final snapshot = await _messagesRef.child(chatId).get();
       if (snapshot.exists && snapshot.value is Map) {
         final data = Map<String, dynamic>.from(snapshot.value as Map);
         final messages = data.values
-            .map(
-              (msgData) => Message.fromJson(Map<String, dynamic>.from(msgData)),
-            )
+            .map((msgData) => Message.fromJson(Map<String, dynamic>.from(msgData)))
             .toList();
-
+        
         messages.sort((a, b) => a.time.compareTo(b.time));
         return messages;
       }
@@ -90,12 +111,40 @@ class FirebaseMessageRepository implements MessageRepository {
   @override
   Future<void> sendMessage(Message message) async {
     try {
-      await _messagesRef.child(message.id).set(message.toJson());
+      final chatId = _generateChatId(message.senderId, message.receiverId);
+      await _messagesRef.child(chatId).child(message.id).set(message.toJson());
       await _createOrUpdateConversation(message);
     } catch (e) {
       print("Error sending message: $e");
       rethrow;
     }
+  }
+  
+  @override
+  Future<List<Message>> getChatMessages(String userId1, String userId2) async {
+    try {
+      final chatId = _generateChatId(userId1, userId2);
+      final snapshot = await _messagesRef.child(chatId).get();
+      
+      if (snapshot.exists && snapshot.value is Map) {
+        final data = Map<String, dynamic>.from(snapshot.value as Map);
+        final messages = data.values
+            .map((msgData) => Message.fromJson(Map<String, dynamic>.from(msgData)))
+            .toList();
+        
+        messages.sort((a, b) => a.time.compareTo(b.time));
+        return messages;
+      }
+      return [];
+    } catch (e) {
+      print("Error fetching chat messages: $e");
+      return [];
+    }
+  }
+  
+  String _generateChatId(String userId1, String userId2) {
+    final sortedIds = [userId1, userId2]..sort();
+    return '${sortedIds[0]}_${sortedIds[1]}';
   }
 
   Future<void> _createOrUpdateConversation(Message message) async {

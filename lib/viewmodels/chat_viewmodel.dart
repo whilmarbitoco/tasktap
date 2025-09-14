@@ -48,23 +48,37 @@ class ChatViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      print('Loading chat data for taskId: $taskId');
+
       // Load task information
       _task = await _taskRepository.getTask(taskId);
       if (_task != null) {
         taskTitle = _task!.title;
-        // Load other user information
-        _otherUser = await _userRepository.getUser(_task!.postedByUserId);
+        print('Task loaded: ${_task!.title}');
+
+        // Determine other user (if current user is task owner, other user is the one messaging)
+        // For now, assume other user is the task owner
+        final otherUserId = _task!.postedByUserId != _currentUserId
+            ? _task!.postedByUserId
+            : _currentUserId; // This needs to be determined from conversation
+
+        _otherUser = await _userRepository.getUser(otherUserId!);
         if (_otherUser != null) {
           userName = _otherUser!.name;
+          print('Other user loaded: ${_otherUser!.name}');
         }
       }
 
-      // Load messages
-      final messages = await _messageRepository.getTaskMessages(taskId);
-      _messages.clear();
-      _messages.addAll(messages);
+      // Load messages using user IDs
+      if (_otherUser != null && _currentUserId != null) {
+        print('Loading messages between $_currentUserId and ${_otherUser!.id}');
+        final messages = await _messageRepository.getChatMessages(_currentUserId!, _otherUser!.id);
+        _messages.clear();
+        _messages.addAll(messages);
+        print('Loaded ${messages.length} messages');
+      }
     } catch (e) {
-      // Handle error
+      print('Error loading chat data: $e');
     }
 
     _isLoading = false;
@@ -72,13 +86,14 @@ class ChatViewModel extends ChangeNotifier {
   }
 
   Future<void> sendMessage(String text) async {
-    if (text.trim().isEmpty || _currentUserId == null) return;
+    if (text.trim().isEmpty || _currentUserId == null || _otherUser == null)
+      return;
 
     final message = Message(
       id: '${taskId}_${DateTime.now().millisecondsSinceEpoch}',
       text: text.trim(),
       senderId: _currentUserId!,
-      receiverId: _task?.postedByUserId ?? '',
+      receiverId: _otherUser!.id,
       taskId: taskId,
       time: DateTime.now(),
     );
@@ -88,6 +103,7 @@ class ChatViewModel extends ChangeNotifier {
 
     try {
       await _messageRepository.sendMessage(message);
+      print('Message sent successfully');
 
       // Send notification to other user
       if (_otherUser != null && _task != null) {
@@ -98,7 +114,7 @@ class ChatViewModel extends ChangeNotifier {
         );
       }
     } catch (e) {
-      // Handle error
+      print('Error sending message: $e');
     }
   }
 

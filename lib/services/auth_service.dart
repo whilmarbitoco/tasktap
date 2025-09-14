@@ -73,10 +73,10 @@ class AuthService {
   Future<User?> signInWithGoogle() async {
     try {
       print('Starting Google Sign-In...');
-      
+
       // Clear any existing sign-in state
       await _googleSignIn.signOut();
-      
+
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
         print('Google Sign-In cancelled by user');
@@ -99,11 +99,11 @@ class AuthService {
 
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
-          
+
       if (googleAuth.accessToken == null || googleAuth.idToken == null) {
         throw 'Failed to get Google authentication tokens';
       }
-      
+
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
@@ -138,10 +138,10 @@ class AuthService {
   Future<User?> signUpWithGoogle(String name) async {
     try {
       print('Starting Google Sign-Up...');
-      
+
       // Clear any existing sign-in state
       await _googleSignIn.signOut();
-      
+
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
         print('Google Sign-Up cancelled by user');
@@ -152,11 +152,11 @@ class AuthService {
 
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
-          
+
       if (googleAuth.accessToken == null || googleAuth.idToken == null) {
         throw 'Failed to get Google authentication tokens';
       }
-      
+
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
@@ -173,7 +173,9 @@ class AuthService {
       // Create user record in database
       await _createUserRecord(
         user,
-        name.isNotEmpty ? name : (user.displayName ?? 'User'),
+        name.isNotEmpty
+            ? name
+            : (user.displayName ?? 'User-${user.uid.substring(0, 5)}'),
       );
 
       print('User record created: ${user.email}');
